@@ -1,4 +1,7 @@
 {
+  "buildCommand": "cd client && npm install --legacy-peer-deps && npm run build",
+  "outputDirectory": "server/public",
+  "installCommand": "echo skip",
   "rewrites": [
     { "source": "/((?!api/.*).*)", "destination": "/index.html" }
   ],
