@@ -1,0 +1,26 @@
+{
+  "name": "touchbase-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --env-file=../.env index.js",
+    "start": "node --env-file=../.env index.js",
+    "db:push": "drizzle-kit push --config=drizzle.config.js",
+    "db:studio": "drizzle-kit studio --config=drizzle.config.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.30.10",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.21.4"
+  }
+}

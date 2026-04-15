@@ -1,0 +1,45 @@
+{
+  "name": "Touchbase CRM",
+  "short_name": "Touchbase",
+  "description": "Your personal networking companion — stay connected, never lose touch.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#F59E0B",
+  "background_color": "#ffffff",
+  "categories": ["productivity", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "description": "View today's touchbase",
+      "url": "/"
+    },
+    {
+      "name": "Add Contact",
+      "short_name": "Add",
+      "description": "Add a new contact",
+      "url": "/contacts"
+    }
+  ]
+}

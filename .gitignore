@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build output
+server/public/
+client/dist/
+
+# Environment variables — never commit secrets
+.env
+.env.local
+.env.*.local
+
+# Uploads (user files — not in git)
+server/uploads/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

@@ -1,0 +1,18 @@
+{
+  "name": "touchbase",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Personal networking CRM — stay connected, never lose touch",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\" --names \"API,UI\" --prefix-colors \"cyan,magenta\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "db:push": "cd server && npm run db:push",
+    "db:studio": "cd server && npm run db:studio"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
