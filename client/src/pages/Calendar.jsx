@@ -43,7 +43,10 @@ export default function Calendar() {
   const { addToast } = useUIStore()
 
   useEffect(() => {
-    listContacts({ limit: 500 }).then(d => { setContacts(d); setLoading(false) })
+    listContacts({ limit: 500 })
+      .then(d => setContacts(d))
+      .catch(() => setContacts([]))
+      .finally(() => setLoading(false))
   }, [])
 
   const days = useMemo(() => {

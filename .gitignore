@@ -11,6 +11,7 @@ client/dist/
 .env
 .env.local
 .env.*.local
+client/.env
 
 # Uploads (user files — not in git)
 server/uploads/
@@ -27,3 +28,4 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+.vercel

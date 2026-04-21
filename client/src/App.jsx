@@ -7,6 +7,7 @@ import Network from './pages/Network.jsx'
 import Calendar from './pages/Calendar.jsx'
 import Templates from './pages/Templates.jsx'
 import StreakPage from './pages/StreakPage.jsx'
+import Settings from './pages/Settings.jsx'
 import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
@@ -27,10 +28,10 @@ export default function App() {
   useEffect(() => {
     initDarkMode()
 
-    // Load initial session from Supabase
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-    })
+    // Load initial session — always resolve so isLoading never stays stuck
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => setSession(session))
+      .catch(() => setSession(null))
 
     // Keep auth state in sync
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -66,6 +67,7 @@ export default function App() {
                 <Route path="/calendar"  element={<Calendar />} />
                 <Route path="/templates" element={<Templates />} />
                 <Route path="/streak"    element={<StreakPage />} />
+                <Route path="/settings"  element={<Settings />} />
                 <Route path="*"          element={<Navigate to="/" replace />} />
               </Routes>
             </AppShell>

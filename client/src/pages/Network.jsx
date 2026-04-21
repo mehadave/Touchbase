@@ -28,7 +28,10 @@ function CategoryContacts({ category }) {
   const [showDetail, setShowDetail] = useState(false)
 
   useEffect(() => {
-    listContacts({ category }).then(d => { setContacts(d); setLoading(false) })
+    listContacts({ category })
+      .then(d => setContacts(d))
+      .catch(() => setContacts([]))
+      .finally(() => setLoading(false))
   }, [category])
 
   if (loading) return <PageSpinner />
@@ -61,10 +64,11 @@ function ProfessionalNetwork() {
   const { addToast } = useUIStore()
 
   const load = () => {
-    Promise.all([
-      listContacts({ category: 'Professional' }),
-      listConferences(),
-    ]).then(([c, conf]) => { setContacts(c); setConferences(conf); setLoading(false) })
+    setLoading(true)
+    Promise.all([listContacts({ category: 'Professional' }), listConferences()])
+      .then(([c, conf]) => { setContacts(c); setConferences(conf) })
+      .catch(() => { setContacts([]); setConferences([]) })
+      .finally(() => setLoading(false))
   }
 
   useEffect(() => { load() }, [])

@@ -64,10 +64,14 @@ export default function Login() {
           <Logo size="lg" />
         </div>
 
+        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-6 -mt-4">
+          Your personal networking CRM
+        </p>
+
         {/* Card */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Welcome back</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Sign in to your Touchbase account</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 text-center">Welcome back</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">Sign in to your Touchbase account</p>
 
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400">

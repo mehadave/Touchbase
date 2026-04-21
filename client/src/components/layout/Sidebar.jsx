@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Network, Calendar,
-  MessageSquare, Flame, Sun, Moon, Search,
+  MessageSquare, Flame, Settings, Sun, Moon, Search,
 } from 'lucide-react'
 import Logo from './Logo.jsx'
 import Footer from '../Footer.jsx'
@@ -15,6 +15,7 @@ const navItems = [
   { to: '/calendar',  icon: Calendar,        label: 'Calendar' },
   { to: '/templates', icon: MessageSquare,   label: 'Templates' },
   { to: '/streak',    icon: Flame,           label: 'Streak' },
+  { to: '/settings',  icon: Settings,        label: 'Settings' },
 ]
 
 export default function Sidebar() {
@@ -70,13 +71,24 @@ export default function Sidebar() {
 
       {/* Bottom controls */}
       <div className="px-4 py-4 border-t border-gray-100 dark:border-gray-800">
-        <button
-          onClick={toggleDarkMode}
-          className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-        >
-          {darkMode ? <Sun size={16} /> : <Moon size={16} />}
-          {darkMode ? 'Light mode' : 'Dark mode'}
-        </button>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            {darkMode ? <Moon size={15} /> : <Sun size={15} />}
+            <span>{darkMode ? 'Dark mode' : 'Light mode'}</span>
+          </div>
+          <button
+            onClick={toggleDarkMode}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+              darkMode ? 'bg-amber-500' : 'bg-gray-200 dark:bg-gray-700'
+            }`}
+            role="switch"
+            aria-checked={darkMode}
+          >
+            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform ${
+              darkMode ? 'translate-x-[18px]' : 'translate-x-[3px]'
+            }`} />
+          </button>
+        </div>
       </div>
 
       {/* Copyright */}

@@ -82,7 +82,10 @@ export default function Templates() {
   const [saveLoading, setSaveLoading] = useState(false)
   const { addToast } = useUIStore()
 
-  const load = () => listTemplates().then(d => { setTemplates(d); setLoading(false) })
+  const load = () => listTemplates()
+    .then(d => setTemplates(d))
+    .catch(() => setTemplates([]))
+    .finally(() => setLoading(false))
   useEffect(() => { load() }, [])
 
   const handleCreate = async (data) => {

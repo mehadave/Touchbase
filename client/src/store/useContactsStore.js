@@ -32,7 +32,11 @@ export const useContactsStore = create((set, get) => ({
       set({ contacts: data, loading: false })
     } catch (err) {
       set({ loading: false })
-      useUIStore.getState().addToast('Failed to load contacts', 'error')
+      // Don't show error for 404 or empty results — just means no contacts yet
+      const status = err?.status ?? err?.statusCode ?? err?.response?.status
+      if (status !== 404 && err?.message !== 'No contacts found') {
+        useUIStore.getState().addToast('Failed to load contacts', 'error')
+      }
     }
   },
 

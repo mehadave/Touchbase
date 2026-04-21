@@ -100,9 +100,13 @@ export default function Signup() {
           <Logo size="lg" />
         </div>
 
+        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-6 -mt-4">
+          Your personal networking CRM
+        </p>
+
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Create your account</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 text-center">Create your account</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">
             Start building meaningful connections
           </p>
 
