@@ -4,6 +4,7 @@ import {
   MessageSquare, Flame, Sun, Moon, Search,
 } from 'lucide-react'
 import Logo from './Logo.jsx'
+import Footer from '../Footer.jsx'
 import { useUIStore } from '../../store/useUIStore.js'
 import { useStreakStore } from '../../store/useStreakStore.js'
 
@@ -77,6 +78,9 @@ export default function Sidebar() {
           {darkMode ? 'Light mode' : 'Dark mode'}
         </button>
       </div>
+
+      {/* Copyright */}
+      <Footer />
     </aside>
   )
 }
