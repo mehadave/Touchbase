@@ -8,11 +8,13 @@ import Calendar from './pages/Calendar.jsx'
 import Templates from './pages/Templates.jsx'
 import StreakPage from './pages/StreakPage.jsx'
 import Settings from './pages/Settings.jsx'
+import Notes from './pages/Notes.jsx'
 import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { ToastContainer } from './components/ui/Toast.jsx'
 import SearchModal from './components/SearchModal.jsx'
+import OnboardingTour from './components/OnboardingTour.jsx'
 import { useUIStore } from './store/useUIStore.js'
 import { useSettingsStore } from './store/useSettingsStore.js'
 import { useStreakStore } from './store/useStreakStore.js'
@@ -67,6 +69,7 @@ export default function App() {
                 <Route path="/calendar"  element={<Calendar />} />
                 <Route path="/templates" element={<Templates />} />
                 <Route path="/streak"    element={<StreakPage />} />
+                <Route path="/notes"     element={<Notes />} />
                 <Route path="/settings"  element={<Settings />} />
                 <Route path="*"          element={<Navigate to="/" replace />} />
               </Routes>
@@ -77,6 +80,7 @@ export default function App() {
 
       <SearchModal />
       <ToastContainer />
+      <OnboardingTour />
     </BrowserRouter>
   )
 }

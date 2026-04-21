@@ -16,6 +16,7 @@ import conferencesRouter from './routes/conferences.js'
 import templatesRouter   from './routes/templates.js'
 import touchbaseRouter   from './routes/touchbase.js'
 import settingsRouter    from './routes/settings.js'
+import notesRouter       from './routes/notes.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PORT      = process.env.PORT || 3001
@@ -40,6 +41,7 @@ app.use('/api/conferences', authenticate, conferencesRouter)
 app.use('/api/templates',   authenticate, templatesRouter)
 app.use('/api/touchbase',   authenticate, touchbaseRouter)
 app.use('/api/settings',    authenticate, settingsRouter)
+app.use('/api/notes',       authenticate, notesRouter)
 
 // Serve built client in production
 if (fs.existsSync(PUBLIC)) {

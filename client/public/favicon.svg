@@ -1,16 +1,16 @@
-<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F59E0B"/>
-      <stop offset="100%" stop-color="#EF4444"/>
+    <linearGradient id="tbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#EF4444" />
     </linearGradient>
-    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.9"/>
-      <stop offset="100%" stop-color="#F97316" stop-opacity="0.9"/>
+    <linearGradient id="tbGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#F97316" stop-opacity="0.9" />
     </linearGradient>
   </defs>
-  <circle cx="18" cy="24" r="14" fill="url(#g1)"/>
-  <circle cx="30" cy="24" r="14" fill="url(#g2)"/>
+  <circle cx="18" cy="24" r="14" fill="url(#tbGrad)" />
+  <circle cx="30" cy="24" r="14" fill="url(#tbGrad2)" />
   <path d="M 18 24 Q 20 18 24 24 Q 28 30 30 24" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
   <circle cx="18" cy="24" r="2" fill="white" opacity="0.9"/>
   <circle cx="30" cy="24" r="2" fill="white" opacity="0.9"/>

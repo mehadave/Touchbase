@@ -1,12 +1,12 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, Network, Calendar, Flame, Settings } from 'lucide-react'
+import { LayoutDashboard, Users, Network, Calendar, Settings, StickyNote } from 'lucide-react'
 
 const tabs = [
   { to: '/',         icon: LayoutDashboard, label: 'Home'     },
   { to: '/contacts', icon: Users,           label: 'Contacts' },
   { to: '/network',  icon: Network,         label: 'Network'  },
+  { to: '/notes',    icon: StickyNote,      label: 'Notes'    },
   { to: '/calendar', icon: Calendar,        label: 'Calendar' },
-  { to: '/streak',   icon: Flame,           label: 'Streak'   },
   { to: '/settings', icon: Settings,        label: 'Settings' },
 ]
 

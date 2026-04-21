@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Network, Calendar,
-  MessageSquare, Flame, Settings, Sun, Moon, Search,
+  MessageSquare, Flame, Settings, Sun, Moon, Search, StickyNote,
 } from 'lucide-react'
 import Logo from './Logo.jsx'
 import Footer from '../Footer.jsx'
@@ -15,6 +15,7 @@ const navItems = [
   { to: '/calendar',  icon: Calendar,        label: 'Calendar' },
   { to: '/templates', icon: MessageSquare,   label: 'Templates' },
   { to: '/streak',    icon: Flame,           label: 'Streak' },
+  { to: '/notes',     icon: StickyNote,      label: 'Notes' },
   { to: '/settings',  icon: Settings,        label: 'Settings' },
 ]
 

@@ -111,6 +111,32 @@ export async function applyMigrations() {
       WHERE search_vector IS NULL;
     `)
 
+    // ⑩ Notes table (idempotent)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS notes (
+        id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id      UUID NOT NULL,
+        title        TEXT NOT NULL DEFAULT '',
+        body         TEXT NOT NULL DEFAULT '',
+        category     TEXT NOT NULL DEFAULT 'General',
+        contact_id   UUID REFERENCES contacts(id) ON DELETE SET NULL,
+        photo_paths  JSONB NOT NULL DEFAULT '[]',
+        created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        deleted_at   TIMESTAMPTZ
+      );
+      CREATE INDEX IF NOT EXISTS idx_notes_user    ON notes(user_id);
+      CREATE INDEX IF NOT EXISTS idx_notes_contact ON notes(contact_id);
+    `)
+
+    await client.query(`
+      DO $$ BEGIN
+        CREATE TRIGGER trg_notes_updated_at
+          BEFORE UPDATE ON notes
+          FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+    `)
+
     await client.query('COMMIT')
     console.log('✓ Database migrations applied')
   } catch (err) {
