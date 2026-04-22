@@ -5,17 +5,27 @@ const BASE = import.meta.env.VITE_API_URL || '/api'
 
 async function request(method, path, body, options = {}) {
   const token = useAuthStore.getState().getToken()
+  const isFormData = body instanceof FormData
 
   const headers = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   }
 
-  const res = await fetch(`${BASE}${path}`, {
+  // Build query string for GET params
+  let url = `${BASE}${path}`
+  if (options.params) {
+    const qs = new URLSearchParams(
+      Object.fromEntries(Object.entries(options.params).filter(([, v]) => v !== undefined && v !== null && v !== ''))
+    ).toString()
+    if (qs) url += '?' + qs
+  }
+
+  const res = await fetch(url, {
     method,
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: isFormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
   })
 
   if (!res.ok) {
@@ -27,8 +37,9 @@ async function request(method, path, body, options = {}) {
 }
 
 export const api = {
-  get:    (path, opts)       => request('GET',    path, undefined, opts),
-  post:   (path, body, opts) => request('POST',   path, body,      opts),
-  put:    (path, body, opts) => request('PUT',    path, body,      opts),
-  delete: (path, opts)       => request('DELETE', path, undefined, opts),
+  get:    (path, params)     => request('GET',    path, undefined, { params }),
+  post:   (path, body)       => request('POST',   path, body),
+  put:    (path, body)       => request('PUT',    path, body),
+  delete: (path)             => request('DELETE', path),
+  upload: (path, formData)   => request('POST',   path, formData),
 }

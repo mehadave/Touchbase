@@ -1,6 +1,6 @@
-import { api } from './index.js'
+import { api } from './client.js'
 
-export const listTemplates  = ()       => api.get('/api/templates')
-export const createTemplate = (data)   => api.post('/api/templates', data)
-export const updateTemplate = (id, d)  => api.put(`/api/templates/${id}`, d)
-export const deleteTemplate = (id)     => api.delete(`/api/templates/${id}`)
+export const listTemplates  = ()     => api.get('/templates')
+export const createTemplate = (data) => api.post('/templates', data)
+export const updateTemplate = (id,d) => api.put(`/templates/${id}`, d)
+export const deleteTemplate = (id)   => api.delete(`/templates/${id}`)

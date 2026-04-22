@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Search, Tag, User, Trash2, Edit3, X, Image, StickyNote, ChevronDown } from 'lucide-react'
+import { Plus, Search, Tag, User, Trash2, Edit3, X, Image, StickyNote, ChevronDown, Check } from 'lucide-react'
 import { listNotes, createNote, updateNote, deleteNote } from '../api/notes.js'
 import { listContacts } from '../api/contacts.js'
 import { useUIStore } from '../store/useUIStore.js'
@@ -21,6 +21,58 @@ const CATEGORY_COLORS = {
   Professional:    'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400',
 }
 
+// Custom inline dropdown — never escapes the modal on mobile
+function InlineSelect({ value, onChange, options, placeholder, icon: Icon }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const selected = options.find(o => (o.value ?? o) === value)
+  const label = selected ? (selected.label ?? selected) : placeholder
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 text-xs font-medium pl-2.5 pr-2 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-amber-400 transition-colors"
+      >
+        {Icon && <Icon size={11} className="text-gray-400" />}
+        <span className="max-w-[140px] truncate">{label}</span>
+        <ChevronDown size={11} className={`text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 mt-1 z-50 min-w-[160px] max-h-52 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-1">
+          {options.map(opt => {
+            const val = opt.value ?? opt
+            const lbl = opt.label ?? opt
+            const isSelected = val === value
+            return (
+              <button
+                key={val}
+                type="button"
+                onClick={() => { onChange(val); setOpen(false) }}
+                className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs transition-colors ${
+                  isSelected
+                    ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+              >
+                <span className="flex-1">{lbl}</span>
+                {isSelected && <Check size={11} />}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function NoteEditor({ initial = {}, contacts = [], onSave, onCancel, loading }) {
   const [form, setForm] = useState({
     title: initial.title || '',
@@ -33,6 +85,12 @@ function NoteEditor({ initial = {}, contacts = [], onSave, onCancel, loading }) 
 
   useEffect(() => { bodyRef.current?.focus() }, [])
 
+  const categoryOptions = CATEGORIES.filter(c => c !== 'All')
+  const contactOptions = [
+    { value: '', label: 'No linked contact' },
+    ...contacts.map(c => ({ value: c.id, label: c.fullName })),
+  ]
+
   return (
     <form onSubmit={e => { e.preventDefault(); onSave(form) }} className="p-5 space-y-4">
       {/* Title */}
@@ -43,31 +101,21 @@ function NoteEditor({ initial = {}, contacts = [], onSave, onCancel, loading }) 
         className="w-full text-lg font-semibold bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-gray-600"
       />
 
-      {/* Meta row: category + linked contact */}
+      {/* Meta row: category + linked contact — custom dropdowns, never overflow the modal */}
       <div className="flex flex-wrap gap-2">
-        <div className="relative">
-          <select
-            value={form.category}
-            onChange={e => set('category', e.target.value)}
-            className="appearance-none text-xs font-medium pl-3 pr-7 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer"
-          >
-            {CATEGORIES.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-        </div>
-
-        <div className="relative flex-1 min-w-40">
-          <User size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
-          <select
-            value={form.contact_id}
-            onChange={e => set('contact_id', e.target.value)}
-            className="appearance-none text-xs pl-7 pr-6 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer w-full"
-          >
-            <option value="">No linked contact</option>
-            {contacts.map(c => <option key={c.id} value={c.id}>{c.fullName}</option>)}
-          </select>
-          <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-        </div>
+        <InlineSelect
+          value={form.category}
+          onChange={v => set('category', v)}
+          options={categoryOptions}
+          placeholder="Category"
+        />
+        <InlineSelect
+          value={form.contact_id}
+          onChange={v => set('contact_id', v)}
+          options={contactOptions}
+          placeholder="No linked contact"
+          icon={User}
+        />
       </div>
 
       {/* Divider */}

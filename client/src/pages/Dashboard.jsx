@@ -50,8 +50,8 @@ export default function Dashboard() {
       {/* Page title */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          {format(new Date(), 'EEEE, MMMM d, yyyy')}
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          {format(new Date(), 'EEEE, MMMM d')} · relationships don't maintain themselves 😄
         </p>
       </div>
 

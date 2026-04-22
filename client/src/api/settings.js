@@ -1,4 +1,4 @@
-import { api } from './index.js'
+import { api } from './client.js'
 
-export const getSettings    = ()     => api.get('/api/settings')
-export const updateSettings = (data) => api.put('/api/settings', data)
+export const getSettings    = ()     => api.get('/settings')
+export const updateSettings = (data) => api.put('/settings', data)
