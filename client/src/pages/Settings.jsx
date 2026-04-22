@@ -150,51 +150,73 @@ export default function Settings() {
               {freqOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Streak reminders</p>
-              <p className="text-xs text-gray-500 mt-0.5">Remind me to keep my daily streak going</p>
-            </div>
-            <button
-              onClick={() => updateSettings({ streak_reminder_enabled: !settings?.streak_reminder_enabled })}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
-                settings?.streak_reminder_enabled ? 'bg-amber-500' : 'bg-gray-200 dark:bg-gray-700'
-              }`}
-              role="switch"
-            >
-              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform ${
-                settings?.streak_reminder_enabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
-              }`} />
-            </button>
-          </div>
-
-          {/* Push notifications */}
-          {typeof Notification !== 'undefined' && (
-            <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
+          {/* Streak reminders — master toggle */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Daily push notifications</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Daily streak reminders</p>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  {notifPermission === 'denied'
-                    ? 'Blocked in browser — allow in site settings to enable'
-                    : pushSubscribed
-                      ? 'You\'ll get a daily nudge at 9 AM'
-                      : 'Get a daily nudge to reach out to someone'}
+                  {settings?.streak_reminder_enabled
+                    ? 'You\'re opted in — enable push below to receive them'
+                    : 'Get a daily nudge to keep your streak alive'}
                 </p>
               </div>
-              {notifPermission !== 'denied' && (
-                <button
-                  onClick={pushSubscribed ? unsubscribeFromPush : requestNotifications}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    pushSubscribed
-                      ? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-red-50 hover:text-red-500'
-                      : 'bg-amber-500 hover:bg-amber-600 text-white'
-                  }`}
-                >
-                  {pushSubscribed ? <><BellOff size={12} /> Disable</> : <><Bell size={12} /> Enable</>}
-                </button>
-              )}
+              <button
+                onClick={async () => {
+                  const next = !settings?.streak_reminder_enabled
+                  await updateSettings({ streak_reminder_enabled: next })
+                  // If turning on and push not yet set up, prompt
+                  if (next && !pushSubscribed && typeof Notification !== 'undefined' && notifPermission !== 'denied') {
+                    await requestNotifications()
+                  }
+                }}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                  settings?.streak_reminder_enabled ? 'bg-amber-500' : 'bg-gray-200 dark:bg-gray-700'
+                }`}
+                role="switch"
+                aria-checked={!!settings?.streak_reminder_enabled}
+              >
+                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform ${
+                  settings?.streak_reminder_enabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                }`} />
+              </button>
             </div>
-          )}
+
+            {/* Push delivery — only shown when streak reminders are enabled */}
+            {settings?.streak_reminder_enabled && typeof Notification !== 'undefined' && (
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 ${
+                pushSubscribed
+                  ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+                  : 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800'
+              }`}>
+                <div className="flex items-center gap-2">
+                  {pushSubscribed
+                    ? <Bell size={13} className="text-green-500 flex-shrink-0" />
+                    : <Bell size={13} className="text-amber-500 flex-shrink-0" />
+                  }
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {notifPermission === 'denied'
+                      ? 'Notifications blocked — allow in browser site settings'
+                      : pushSubscribed
+                        ? 'Push notifications active — you\'ll be nudged daily at 9 AM'
+                        : 'Enable push notifications to actually receive reminders'}
+                  </p>
+                </div>
+                {notifPermission !== 'denied' && (
+                  <button
+                    onClick={pushSubscribed ? unsubscribeFromPush : requestNotifications}
+                    className={`ml-3 flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                      pushSubscribed
+                        ? 'bg-white dark:bg-gray-800 text-gray-500 hover:text-red-500 border border-gray-200 dark:border-gray-700'
+                        : 'bg-amber-500 hover:bg-amber-600 text-white'
+                    }`}
+                  >
+                    {pushSubscribed ? <><BellOff size={11} /> Off</> : <><Bell size={11} /> Enable</>}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </section>
 

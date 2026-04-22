@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, ArrowRight, CheckCircle } from 'lucide-react'
+import { useAuthStore } from '../store/authStore.js'
 
 const STEPS = [
   {
@@ -44,21 +45,26 @@ const STEPS = [
   },
 ]
 
-const STORAGE_KEY = 'touchbase-tour-count'
 const MAX_SHOWS = 5
 
 export default function OnboardingTour() {
   const [step, setStep] = useState(0)
   const [visible, setVisible] = useState(false)
+  const user = useAuthStore(s => s.user)
 
   useEffect(() => {
+    // Only show the tour when the user is authenticated
+    if (!user?.id) return
+
+    // Use a per-user storage key so different accounts on the same browser behave correctly
+    const STORAGE_KEY = `touchbase-tour-count-${user.id}`
     const count = parseInt(localStorage.getItem(STORAGE_KEY) || '0')
     if (count < MAX_SHOWS) {
       localStorage.setItem(STORAGE_KEY, String(count + 1))
-      const t = setTimeout(() => setVisible(true), 1000)
+      const t = setTimeout(() => setVisible(true), 1200)
       return () => clearTimeout(t)
     }
-  }, [])
+  }, [user?.id])  // re-run only when the logged-in user changes
 
   const dismiss = () => {
     setVisible(false)

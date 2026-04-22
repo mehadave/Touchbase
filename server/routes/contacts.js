@@ -249,6 +249,30 @@ router.put('/:id', async (req, res, next) => {
       .returning()
 
     if (tagNames !== undefined) await upsertTags(updated.id, tagNames)
+
+    // Sync the linked "Contact Notes" note if the notes field changed
+    if (notes !== undefined) {
+      const newNotes = notes?.trim() || ''
+      if (newNotes) {
+        // Upsert: update existing Contact Notes note, or create one
+        const { rows: existingNotes } = await pool.query(
+          `SELECT id FROM notes WHERE contact_id = $1 AND user_id = $2 AND category = 'Contact Notes' AND deleted_at IS NULL LIMIT 1`,
+          [updated.id, req.userId]
+        )
+        if (existingNotes.length > 0) {
+          await pool.query(
+            `UPDATE notes SET body = $1, updated_at = NOW() WHERE id = $2`,
+            [newNotes, existingNotes[0].id]
+          )
+        } else {
+          await pool.query(
+            `INSERT INTO notes (user_id, title, body, category, contact_id) VALUES ($1, $2, $3, 'Contact Notes', $4)`,
+            [req.userId, `Notes — ${updated.fullName}`, newNotes, updated.id]
+          )
+        }
+      }
+    }
+
     res.json(await enrichContact(updated))
   } catch (err) { next(err) }
 })

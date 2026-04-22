@@ -10,14 +10,15 @@ import Button from '../components/ui/Button.jsx'
 import Avatar from '../components/ui/Avatar.jsx'
 import { format, parseISO } from 'date-fns'
 
-const CATEGORIES = ['All', 'General', 'Meeting', 'Idea', 'Follow-up', 'Personal', 'Professional']
+const CATEGORIES = ['All', 'Contact Notes', 'General', 'Meeting', 'Idea', 'Follow-up', 'Personal', 'Professional']
 const CATEGORY_COLORS = {
-  General:      'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300',
-  Meeting:      'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
-  Idea:         'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
-  'Follow-up':  'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400',
-  Personal:     'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400',
-  Professional: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400',
+  'Contact Notes': 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
+  General:         'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300',
+  Meeting:         'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
+  Idea:            'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
+  'Follow-up':     'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400',
+  Personal:        'bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400',
+  Professional:    'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400',
 }
 
 function NoteEditor({ initial = {}, contacts = [], onSave, onCancel, loading }) {
@@ -50,7 +51,7 @@ function NoteEditor({ initial = {}, contacts = [], onSave, onCancel, loading }) 
             onChange={e => set('category', e.target.value)}
             className="appearance-none text-xs font-medium pl-3 pr-7 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer"
           >
-            {CATEGORIES.filter(c => c !== 'All').map(c => <option key={c}>{c}</option>)}
+            {CATEGORIES.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
         </div>
