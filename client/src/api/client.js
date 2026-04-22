@@ -1,9 +1,11 @@
 // Central API client — attaches the Supabase JWT to every request automatically.
+// On 401, it refreshes the session once and retries before giving up.
 import { useAuthStore } from '../store/authStore.js'
+import { supabase } from '../lib/supabase.js'
 
 const BASE = import.meta.env.VITE_API_URL || '/api'
 
-async function request(method, path, body, options = {}) {
+async function request(method, path, body, options = {}, isRetry = false) {
   const token = useAuthStore.getState().getToken()
   const isFormData = body instanceof FormData
 
@@ -27,6 +29,19 @@ async function request(method, path, body, options = {}) {
     headers,
     body: isFormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
   })
+
+  // On 401, refresh the Supabase session once and retry
+  if (res.status === 401 && !isRetry) {
+    try {
+      const { data } = await supabase.auth.refreshSession()
+      if (data?.session) {
+        useAuthStore.getState().setSession(data.session)
+        return request(method, path, body, options, true)
+      }
+    } catch {
+      // refresh failed — fall through to throw the original 401
+    }
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }))
