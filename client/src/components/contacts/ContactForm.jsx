@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Input, { Select } from '../ui/Input.jsx'
 import Button from '../ui/Button.jsx'
 import StarRating from '../ui/StarRating.jsx'
 import TagInput from './TagInput.jsx'
 import { format } from 'date-fns'
+import { Camera, Loader2 as Spinner, AlertCircle } from 'lucide-react'
 
 const FREQUENCIES = [
   { label: 'Weekly (7 days)', value: 7 },
@@ -28,6 +29,9 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
   })
   const [customFreq, setCustomFreq] = useState(false)
   const [errors, setErrors]     = useState({})
+  const [ocrLoading, setOcrLoading] = useState(false)
+  const [ocrError, setOcrError]     = useState('')
+  const fileInputRef = useRef(null)
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }))
 
@@ -44,6 +48,62 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
     return e
   }
 
+  const handleLinkedInScan = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setOcrLoading(true)
+    setOcrError('')
+    try {
+      const { createWorker } = await import('tesseract.js')
+      const worker = await createWorker('eng')
+      const { data: { text } } = await worker.recognize(file)
+      await worker.terminate()
+
+      // Parse extracted text
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+
+      // Name: usually first substantial line (> 3 chars, no @, no http)
+      const nameLine = lines.find(l => l.length > 3 && !l.includes('@') && !l.includes('http') && !l.includes('|') && !/^\d/.test(l))
+      if (nameLine && !form.fullName) set('fullName', nameLine)
+
+      // Job title: look for lines with common title patterns
+      const titleKeywords = ['director', 'manager', 'engineer', 'developer', 'designer', 'founder', 'ceo', 'cto', 'vp', 'head of', 'lead', 'senior', 'principal', 'analyst', 'consultant', 'president', 'officer']
+      const titleLine = lines.find(l => titleKeywords.some(k => l.toLowerCase().includes(k)) && l.length < 80)
+      if (titleLine && !form.jobTitle) set('jobTitle', titleLine)
+
+      // Company: look for lines after title that look like company names
+      const titleIdx = titleLine ? lines.indexOf(titleLine) : -1
+      if (titleIdx >= 0 && titleIdx + 1 < lines.length) {
+        const companyCandidate = lines[titleIdx + 1]
+        if (companyCandidate && companyCandidate.length < 60 && !companyCandidate.includes('@') && !form.company) {
+          set('company', companyCandidate)
+        }
+      }
+
+      // Email
+      const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)
+      if (emailMatch && !form.email) set('email', emailMatch[0])
+
+      // Phone
+      const phoneMatch = text.match(/(\+?[\d\s\-().]{10,17})/)
+      if (phoneMatch && !form.phone) set('phone', phoneMatch[0].trim())
+
+      // LinkedIn URL
+      const linkedinMatch = text.match(/linkedin\.com\/in\/[\w-]+/i)
+      if (linkedinMatch && !form.linkedinUrl) set('linkedinUrl', 'https://' + linkedinMatch[0])
+
+      // Auto-set source to linkedin
+      set('source', 'linkedin')
+
+    } catch (err) {
+      console.error('OCR error:', err)
+      setOcrError('Could not read the image. Try a clearer screenshot.')
+    } finally {
+      setOcrLoading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     const e2 = validate()
@@ -56,6 +116,50 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
 
   return (
     <form onSubmit={handleSubmit} className="p-6 space-y-5">
+      {/* LinkedIn OCR Scanner */}
+      <div className="bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/30 rounded-xl p-4 border border-blue-100 dark:border-blue-900/50">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+              <Camera size={14} /> Auto-fill from LinkedIn screenshot
+            </p>
+            <p className="text-xs text-blue-500 dark:text-blue-400 mt-0.5">
+              Upload a screenshot of any LinkedIn profile to auto-fill the form
+            </p>
+          </div>
+          <div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleLinkedInScan}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={ocrLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              {ocrLoading ? <><Spinner size={12} className="animate-spin" /> Scanning…</> : <><Camera size={12} /> Scan photo</>}
+            </button>
+          </div>
+        </div>
+        {ocrError && (
+          <p className="flex items-center gap-1 text-xs text-red-500 mt-2">
+            <AlertCircle size={11} /> {ocrError}
+          </p>
+        )}
+        {ocrLoading && (
+          <div className="mt-2">
+            <div className="h-1 bg-blue-100 dark:bg-blue-900 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-500 rounded-full animate-pulse w-3/4" />
+            </div>
+            <p className="text-xs text-blue-400 mt-1">Reading profile details…</p>
+          </div>
+        )}
+      </div>
+
       {/* Basic info */}
       <div className="grid grid-cols-1 gap-4">
         <Input label="Full Name *" value={form.fullName} onChange={e => set('fullName', e.target.value)}

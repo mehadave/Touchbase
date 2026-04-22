@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User, Bell, Shield, LogOut } from 'lucide-react'
+import { User, Bell, BellOff, Shield, LogOut } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { useSettingsStore } from '../store/useSettingsStore.js'
 import { useUIStore } from '../store/useUIStore.js'
 import Button from '../components/ui/Button.jsx'
+import { api } from '../api/client.js'
 
 export default function Settings() {
   const navigate = useNavigate()
@@ -13,6 +14,61 @@ export default function Settings() {
   const [user, setUser] = useState(null)
   const [displayName, setDisplayName] = useState('')
   const [savingName, setSavingName] = useState(false)
+  const [notifPermission, setNotifPermission] = useState(
+    typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+  )
+  const [pushSubscribed, setPushSubscribed] = useState(false)
+
+  const requestNotifications = async () => {
+    if (typeof Notification === 'undefined') return
+    const permission = await Notification.requestPermission()
+    setNotifPermission(permission)
+    if (permission === 'granted') {
+      await subscribeToPush()
+    }
+  }
+
+  const subscribeToPush = async () => {
+    try {
+      const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
+      if (!vapidKey || !('serviceWorker' in navigator)) return
+      const reg = await navigator.serviceWorker.ready
+      const existing = await reg.pushManager.getSubscription()
+      const sub = existing || await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: vapidKey,
+      })
+      await api.post('/push/subscribe', sub.toJSON())
+      setPushSubscribed(true)
+      addToast('Reminders enabled!')
+    } catch (e) {
+      console.error('Push subscribe error:', e)
+    }
+  }
+
+  const unsubscribeFromPush = async () => {
+    try {
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.getSubscription()
+      if (sub) {
+        await api.delete(`/push/unsubscribe?endpoint=${encodeURIComponent(sub.endpoint)}`)
+        await sub.unsubscribe()
+      }
+      setPushSubscribed(false)
+      addToast('Reminders disabled')
+    } catch (e) {
+      console.error('Push unsubscribe error:', e)
+    }
+  }
+
+  useEffect(() => {
+    if (typeof Notification === 'undefined') return
+    if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(reg =>
+        reg.pushManager.getSubscription().then(sub => setPushSubscribed(!!sub))
+      )
+    }
+  }, [])
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -111,6 +167,34 @@ export default function Settings() {
               }`} />
             </button>
           </div>
+
+          {/* Push notifications */}
+          {typeof Notification !== 'undefined' && (
+            <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
+              <div>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Daily push notifications</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {notifPermission === 'denied'
+                    ? 'Blocked in browser — allow in site settings to enable'
+                    : pushSubscribed
+                      ? 'You\'ll get a daily nudge at 9 AM'
+                      : 'Get a daily nudge to reach out to someone'}
+                </p>
+              </div>
+              {notifPermission !== 'denied' && (
+                <button
+                  onClick={pushSubscribed ? unsubscribeFromPush : requestNotifications}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    pushSubscribed
+                      ? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-red-50 hover:text-red-500'
+                      : 'bg-amber-500 hover:bg-amber-600 text-white'
+                  }`}
+                >
+                  {pushSubscribed ? <><BellOff size={12} /> Disable</> : <><Bell size={12} /> Enable</>}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </section>
 

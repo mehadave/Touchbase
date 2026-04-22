@@ -192,6 +192,16 @@ router.post('/', async (req, res, next) => {
     }).returning()
 
     if (tagNames?.length) await upsertTags(contact.id, tagNames)
+
+    // Auto-create a note if notes were provided
+    if (notes?.trim()) {
+      await pool.query(
+        `INSERT INTO notes (user_id, title, body, category, contact_id)
+         VALUES ($1, $2, $3, 'Contact Notes', $4)`,
+        [req.userId, `Notes — ${fullName.trim()}`, notes.trim(), contact.id]
+      )
+    }
+
     res.status(201).json(await enrichContact(contact))
   } catch (err) { next(err) }
 })

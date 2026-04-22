@@ -137,6 +137,19 @@ export async function applyMigrations() {
       EXCEPTION WHEN duplicate_object THEN NULL; END $$;
     `)
 
+    // ⑪ Push subscriptions table (idempotent)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id    UUID NOT NULL,
+        endpoint   TEXT NOT NULL UNIQUE,
+        p256dh     TEXT NOT NULL,
+        auth_key   TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_push_subs_user ON push_subscriptions(user_id);
+    `)
+
     await client.query('COMMIT')
     console.log('✓ Database migrations applied')
   } catch (err) {

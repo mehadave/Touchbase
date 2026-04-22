@@ -110,24 +110,65 @@ export async function seedDemoData(userId) {
   }
 
   // Default templates
-  await db.insert(templates).values([
+  const templateData = [
     {
-      userId, title: 'Reconnect', categoryTag: 'Personal',
-      body: `Hey {name}! 👋\n\nIt's been a while — hope you're doing well! I was thinking about you and wanted to reach out.\n\nWhat have you been up to lately? Would love to catch up soon!\n\nLooking forward to hearing from you!`,
+      userId,
+      title: 'Catch up — been a while',
+      body: `Hey {name}!\n\nIt's been way too long — hope everything's going well on your end. I was thinking about you the other day and realized we haven't talked in ages.\n\nWould love to grab a coffee or hop on a quick call soon. Are you around in the next couple of weeks?\n\nTalk soon!`,
+      categoryTag: 'Personal',
+      useCount: 0,
     },
     {
-      userId, title: 'Cold Outreach', categoryTag: 'Professional',
-      body: `Hi {name},\n\nHope this message finds you well. I came across your profile and was impressed by your work at {company}.\n\nI'd love to connect and learn more — there could be some interesting overlap with what I'm working on.\n\nWould you be open to a quick 20-minute call?\n\nBest,`,
+      userId,
+      title: 'Conference follow-up',
+      body: `Hey {name},\n\nReally great meeting you at [event] — I loved our conversation about {company} and what you're working on there.\n\nWould love to stay in touch and maybe grab a virtual coffee to dig deeper. What does your schedule look like?\n\nLooking forward to it!`,
+      categoryTag: 'Conference',
+      useCount: 0,
     },
     {
-      userId, title: 'Congrats', categoryTag: 'Professional',
-      body: `Hi {name}!\n\nI just saw the news about your new role as {title} at {company} — congratulations! That's fantastic and so well-deserved.\n\nWould love to celebrate properly when you get a moment!`,
+      userId,
+      title: 'LinkedIn connection follow-up',
+      body: `Hi {name},\n\nThanks for connecting! I noticed you're at {company} as {title} — really interesting work. I've been following what you're doing and would love to hear more about it.\n\nOpen to a quick 20-minute intro call sometime?\n\nBest,`,
+      categoryTag: 'LinkedIn',
+      useCount: 0,
     },
     {
-      userId, title: 'Follow Up', categoryTag: 'Professional',
-      body: `Hi {name},\n\nIt was great connecting recently! I wanted to follow up and see if you had any thoughts on what we discussed.\n\nLooking forward to keeping the conversation going.\n\nBest,`,
+      userId,
+      title: 'Warm congratulations',
+      body: `Hey {name}!\n\nJust saw the news about [achievement] — that's genuinely fantastic, you've worked so hard for this and it shows.\n\nWould love to hear all about it when you have a moment. Huge congrats! 🎉`,
+      categoryTag: 'Personal',
+      useCount: 0,
     },
-  ])
+    {
+      userId,
+      title: 'Professional check-in',
+      body: `Hi {name},\n\nHope things are going well! I've been keeping an eye on what {company} has been up to — looks like exciting times over there.\n\nWould love to reconnect and hear what you've been working on. Grab a quick call soon?\n\nLooking forward to it!`,
+      categoryTag: 'Professional',
+      useCount: 0,
+    },
+    {
+      userId,
+      title: 'Intro ask — warm referral',
+      body: `Hi {name},\n\nHope all's well! Quick ask — I've been trying to connect with someone at [company/area] and thought of you immediately given your network.\n\nWould you happen to know anyone there who'd be open to a quick chat? Totally understand if not, just figured it was worth asking!\n\nEither way, would love to catch up soon.`,
+      categoryTag: 'Professional',
+      useCount: 0,
+    },
+    {
+      userId,
+      title: 'Simple check-in',
+      body: `Hey {name}!\n\nJust dropping a quick note to say hi and see how things are going with you. What's new?\n\nHope life's been treating you well — talk soon!`,
+      categoryTag: 'General',
+      useCount: 0,
+    },
+    {
+      userId,
+      title: 'Post-meeting follow-up',
+      body: `Hi {name},\n\nReally appreciated the time earlier — great conversation and I walked away with a lot to think about.\n\nI'll follow up on [action item] by [date]. Let me know if there's anything else I can do on my end in the meantime.\n\nTalk soon!`,
+      categoryTag: 'Professional',
+      useCount: 0,
+    },
+  ]
+  await db.insert(templates).values(templateData)
 
   // Seed a couple of streak entries
   await db.insert(streakLog).values([

@@ -17,6 +17,7 @@ import templatesRouter   from './routes/templates.js'
 import touchbaseRouter   from './routes/touchbase.js'
 import settingsRouter    from './routes/settings.js'
 import notesRouter       from './routes/notes.js'
+import pushRouter, { sendDailyReminders } from './routes/push.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PORT      = process.env.PORT || 3001
@@ -42,6 +43,7 @@ app.use('/api/templates',   authenticate, templatesRouter)
 app.use('/api/touchbase',   authenticate, touchbaseRouter)
 app.use('/api/settings',    authenticate, settingsRouter)
 app.use('/api/notes',       authenticate, notesRouter)
+app.use('/api/push',        authenticate, pushRouter)
 
 // Serve built client in production
 if (fs.existsSync(PUBLIC)) {
@@ -55,6 +57,19 @@ if (fs.existsSync(PUBLIC)) {
 
 app.use(notFound)
 app.use(errorHandler)
+
+function scheduleDailyReminder() {
+  const now = new Date()
+  const next9am = new Date(now)
+  next9am.setHours(9, 0, 0, 0)
+  if (next9am <= now) next9am.setDate(next9am.getDate() + 1)
+  const msUntil = next9am - now
+  setTimeout(() => {
+    sendDailyReminders()
+    setInterval(sendDailyReminders, 24 * 60 * 60 * 1000)
+  }, msUntil)
+  console.log(`✓ Daily reminders scheduled (next: ${next9am.toLocaleTimeString()})`)
+}
 
 async function start() {
   try {
@@ -77,6 +92,7 @@ async function start() {
 
     app.listen(PORT, () => {
       console.log(`✓ Touchbase API running at http://localhost:${PORT}`)
+      scheduleDailyReminder()
     })
   } catch (err) {
     console.error('Failed to start server:', err.message)

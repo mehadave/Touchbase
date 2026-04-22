@@ -44,22 +44,23 @@ const STEPS = [
   },
 ]
 
-const STORAGE_KEY = 'touchbase-tour-done'
+const STORAGE_KEY = 'touchbase-tour-count'
+const MAX_SHOWS = 5
 
 export default function OnboardingTour() {
   const [step, setStep] = useState(0)
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    // Show tour only once, after a short delay
-    if (!localStorage.getItem(STORAGE_KEY)) {
-      const t = setTimeout(() => setVisible(true), 800)
+    const count = parseInt(localStorage.getItem(STORAGE_KEY) || '0')
+    if (count < MAX_SHOWS) {
+      localStorage.setItem(STORAGE_KEY, String(count + 1))
+      const t = setTimeout(() => setVisible(true), 1000)
       return () => clearTimeout(t)
     }
   }, [])
 
   const dismiss = () => {
-    localStorage.setItem(STORAGE_KEY, '1')
     setVisible(false)
   }
 
