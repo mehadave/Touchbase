@@ -1,114 +1,26 @@
 # Touchbase — Personal Networking CRM
 
-A warm, snappy personal CRM that helps you stay meaningfully connected with the people who matter. Runs 100% locally and offline — no cloud, no subscriptions, no API keys.
+> Personal CRM for people who care about relationships but keep forgetting to reach out. Daily touchbase reminders, streak tracking, smart message templates, LinkedIn OCR auto-fill, and a priority algorithm to surface who needs your attention most. Built with React 18, Express, PostgreSQL (Drizzle ORM), Supabase Auth, and deployed as a PWA on Vercel + Railway.
+
+**Live → [touchbase-three.vercel.app](https://touchbase-three.vercel.app)**
 
 ---
 
 ## Features
 
-- **Daily Touchbase** — A smart daily contact suggestion with a template-matched message, Done/Skip actions, and streak tracking
-- **360° Contact Profiles** — Photo upload, relationship stars (1–5), tags, notes, LinkedIn URL, follow-up frequency
-- **LinkedIn OCR** — Upload a screenshot of any LinkedIn profile; Tesseract.js extracts the URL client-side with zero server calls
-- **Follow-up Calendar** — Monthly calendar view with colour-coded dots showing who's due, overdue, or on track
+- **Daily Touchbase** — A priority algorithm scores every contact by how overdue they are and relationship strength, then picks the one you should reach out to today
 - **Streak System** — Consecutive-day tracking with milestone celebrations (7 / 14 / 30 / 60 / 90 days) and confetti
-- **Message Templates** — Reusable templates with `{name}`, `{company}`, `{title}` placeholders, auto-matched to each day's contact
+- **Smart Templates** — 10 human-sounding message templates with `{name}`, `{company}`, `{title}` placeholders, auto-matched to each contact's category and your relationship strength
+- **LinkedIn OCR** — Upload a screenshot of any LinkedIn profile; Tesseract.js reads it client-side and auto-fills the contact form
+- **Notes** — Freeform notes linked to contacts, auto-created from the contact form under "Contact Notes"
+- **Follow-up Calendar** — Monthly calendar view with colour-coded dots showing who's due, overdue, or on track
+- **360° Contact Profiles** — Photo upload, relationship stars (1–5), tags, notes, LinkedIn URL, follow-up frequency
 - **Conference Tracking** — Log conferences, link contacts met there, see conference badges on cards
 - **CSV Import** — Bulk import with column auto-mapping, preview, and duplicate handling (skip / update / import all)
-- **Global Search** — `Cmd+K` searches across contacts, templates, and conferences simultaneously using PostgreSQL FTS5
-- **Network View** — Browse by Personal / Professional / Social, with dedicated LinkedIn and Conferences sections
-- **Dark Mode** — Persisted to localStorage, respects `prefers-color-scheme` on first load
-- **PWA / Mobile App** — Install to your iPhone or Android home screen for a native-app feel
-
----
-
-## Prerequisites
-
-| Tool | Version | Notes |
-|------|---------|-------|
-| Node.js | 18 + | Required for `--watch` flag |
-| npm | 9 + | Bundled with Node |
-| Docker | Any | For the local PostgreSQL instance |
-| Docker Compose | v2 + | `docker compose` (no hyphen) |
-
----
-
-## Setup
-
-### 1. Clone / download the project
-
-```bash
-cd ~/Desktop/myapps/Touchbase
-```
-
-### 2. Start PostgreSQL
-
-```bash
-docker compose up -d
-```
-
-This spins up a PostgreSQL 16 container on port `5432` with:
-- Database: `touchbase`
-- User: `touchbase`
-- Password: `touchbase_dev`
-
-Data is persisted in a Docker volume (`postgres_data`) — it survives container restarts.
-
-### 3. Install dependencies
-
-```bash
-npm install          # root (installs concurrently)
-cd client && npm install && cd ..
-cd server && npm install && cd ..
-```
-
-### 4. Start the dev server
-
-```bash
-npm run dev
-```
-
-This concurrently starts:
-- **API server** → `http://localhost:3001` (Express + Drizzle + PostgreSQL)
-- **UI dev server** → `http://localhost:5173` (Vite + React)
-
-On first run the server automatically:
-1. Creates all tables and PostgreSQL triggers/indexes
-2. Seeds 5 example contacts, 4 message templates, and 1 conference
-
-Open **http://localhost:5173** — you'll see the Dashboard with a pre-populated contact ready for today's touchbase.
-
----
-
-## Project Structure
-
-```
-Touchbase/
-├── docker-compose.yml      PostgreSQL 16 container
-├── .env                    DATABASE_URL and PORT (gitignored)
-├── .env.example            Template for .env
-│
-├── client/                 Vite + React 18
-│   ├── src/
-│   │   ├── pages/          Dashboard, Contacts, Network, Calendar, Templates, Streak
-│   │   ├── components/     UI primitives, contact cards, conference panels, etc.
-│   │   ├── store/          Zustand state (contacts, streak, settings, UI)
-│   │   ├── api/            Thin fetch wrappers for each backend endpoint
-│   │   └── hooks/          useKeyboardShortcut, usePWAInstall, useDebounce
-│   └── public/
-│       ├── manifest.json   PWA manifest
-│       ├── sw.js           Service worker (cache-first shell, network-first API)
-│       └── favicon.svg     Amber-gradient logo icon
-│
-└── server/                 Express.js API
-    ├── db/
-    │   ├── schema.js       Drizzle ORM schema (single source of truth)
-    │   ├── client.js       pg pool + Drizzle instance
-    │   ├── migrate.js      PostgreSQL triggers, FTS, CHECK constraints
-    │   └── seed.js         First-run sample data
-    ├── routes/             contacts, conferences, templates, touchbase, settings
-    ├── middleware/         multer photo upload, error handler
-    └── uploads/            Contact photos (gitignored)
-```
+- **Global Search** — `Cmd+K` searches contacts using PostgreSQL full-text search (tsvector + GIN index)
+- **Dark Mode** — Persisted to localStorage, respects `prefers-color-scheme` on first load, no flash
+- **PWA** — Installable on iPhone and Android home screen, works offline via Workbox service worker
+- **Push Notifications** — Optional daily streak reminders via Web Push / VAPID
 
 ---
 
@@ -116,48 +28,107 @@ Touchbase/
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 18, Tailwind CSS, React Router v6, Zustand |
-| Backend | Express.js, Drizzle ORM |
-| Database | PostgreSQL 16 (Docker) |
-| OCR | Tesseract.js (100% client-side) |
-| Icons | Lucide React |
+| Frontend | React 18, Vite, Tailwind CSS, React Router v6, Zustand |
+| Backend | Node.js, Express, Drizzle ORM |
+| Database | PostgreSQL 16 (Supabase managed) |
+| Auth | Supabase Auth (Email/Password + Google OAuth) |
+| OCR | Tesseract.js (lazy-loaded WASM, client-side) |
+| CSV | PapaParse |
 | Dates | date-fns |
-| CSV parsing | PapaParse |
-| Confetti | canvas-confetti |
-| Build | Vite 6 |
+| Icons | Lucide React |
+| Push | web-push (VAPID) |
+| PWA | vite-plugin-pwa + Workbox |
+| Hosting | Vercel (frontend) + Railway (backend) |
 
 ---
 
-## Available Scripts
+## Architecture
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start both client and server in watch mode |
-| `npm run dev:client` | Start Vite dev server only |
-| `npm run dev:server` | Start Express server only (with `--watch`) |
-| `npm run build` | Build the client into `server/public/` |
-| `npm start` | Serve the built app on port 3001 (production) |
-| `npm run db:push` | Push Drizzle schema changes to the database |
-| `npm run db:studio` | Open Drizzle Studio (visual DB explorer) |
+```
+Browser (Vercel CDN)          Railway (Express API)         Supabase
+┌─────────────────────┐       ┌─────────────────────┐       ┌──────────────┐
+│  React 18 SPA       │─────► │  Express REST API   │─────► │  PostgreSQL  │
+│  Zustand state      │ HTTPS │  Drizzle ORM        │  pg   │  Auth (JWT)  │
+│  Workbox PWA        │  JWT  │  Multer uploads     │       └──────────────┘
+└─────────────────────┘       └─────────────────────┘
+```
+
+Every API request carries a Supabase JWT. The server decodes it to get the user's UUID and scopes every DB query to that user.
 
 ---
 
-## Installing as a Mobile App (PWA)
+## Running Locally
 
-### Android / Chrome
-1. Open `http://localhost:5173` in Chrome
-2. Tap the **⋮ menu → "Add to Home Screen"**
-3. Or click the **Install** banner that appears at the bottom of the page
+### 1. Clone
 
-### iPhone / Safari
-1. Open `http://localhost:5173` in Safari
-2. Tap the **Share** button (box with arrow)
-3. Tap **"Add to Home Screen"**
-4. Name it "Touchbase" and tap **Add**
+```bash
+git clone https://github.com/mehadave/Touchbase.git
+cd Touchbase
+```
 
-The app will open in standalone mode (no browser chrome) with full offline support for the UI shell.
+### 2. Set up environment variables
 
-> **Note:** For PWA installation to work on your phone, the server must be accessible from the device. You can expose it on your local network by changing `server: { host: true }` in `client/vite.config.js`.
+```bash
+cp .env.example .env
+```
+
+Fill in `.env`:
+
+```env
+DATABASE_URL=postgresql://...        # Supabase connection string
+PORT=3001
+NODE_ENV=development
+VITE_SUPABASE_URL=https://xxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJ...
+VITE_API_URL=http://localhost:3001/api
+```
+
+### 3. Install & run
+
+```bash
+npm install
+cd client && npm install && cd ..
+cd server && npm install && cd ..
+npm run dev
+```
+
+Opens:
+- **Frontend** → `http://localhost:5173`
+- **API** → `http://localhost:3001`
+
+---
+
+## Project Structure
+
+```
+Touchbase/
+├── client/                 Vite + React 18
+│   └── src/
+│       ├── api/            Fetch wrappers (auth token injected automatically)
+│       ├── components/     UI primitives, contact cards, layout shell
+│       ├── pages/          Dashboard, Contacts, Notes, Templates, Calendar, Streak
+│       ├── store/          Zustand: auth, contacts, streak, settings, UI
+│       └── hooks/          useDebounce, useKeyboardShortcut, usePWAInstall
+│
+└── server/
+    ├── db/
+    │   ├── schema.js       Drizzle schema — single source of truth
+    │   ├── migrate.js      Raw SQL: triggers, FTS (tsvector + GIN), constraints
+    │   └── seed.js         Sample data on first run
+    ├── middleware/         authenticate (JWT), multer (photos), errorHandler
+    └── routes/             contacts, notes, templates, touchbase, settings, push
+```
+
+---
+
+## Key Technical Details
+
+- **Full-text search** — PostgreSQL `tsvector` column maintained by a trigger, queried with `tsquery` prefix matching and ranked by `ts_rank`
+- **Streak SQL** — Uses the consecutive-dates window function trick: `date - ROW_NUMBER() OVER (ORDER BY date)` groups consecutive days into a constant
+- **Priority algorithm** — `LEAST(days_overdue / frequency, 3.0) + (strength × 0.2)` — overdue ratio capped at 3× to prevent monopolisation
+- **Lazy OCR** — Tesseract.js (~10MB WASM) is dynamically imported only when the user clicks "Scan photo"
+- **Soft deletes** — All tables have `deleted_at TIMESTAMPTZ`; nothing is ever hard-deleted
+- **Auto token refresh** — On 401, the API client calls `supabase.auth.refreshSession()` and retries once
 
 ---
 
@@ -166,33 +137,14 @@ The app will open in standalone mode (no browser chrome) with full offline suppo
 | Shortcut | Action |
 |----------|--------|
 | `Cmd+K` / `Ctrl+K` | Open global search |
-| `Escape` | Close modals / drawers / search |
+| `Escape` | Close modals / search |
 
 ---
 
-## Environment Variables
+## Deploying
 
-Copy `.env.example` to `.env` and adjust as needed:
-
-```env
-DATABASE_URL=postgresql://touchbase:touchbase_dev@localhost:5432/touchbase
-PORT=3001
-NODE_ENV=development
-UPLOADS_DIR=./uploads
-```
-
----
-
-## Backup
-
-Your data lives in a Docker volume. To back it up:
-
-```bash
-# Dump the database
-docker exec touchbase-db-1 pg_dump -U touchbase touchbase > backup.sql
-
-# Restore
-cat backup.sql | docker exec -i touchbase-db-1 psql -U touchbase touchbase
-```
-
-Contact photos are stored in `server/uploads/` — back up that folder too.
+| Service | Config |
+|---------|--------|
+| **Vercel** | `vercel.json` in root — builds `client/`, outputs to `server/public/` |
+| **Railway** | `server/` runs `node index.js` — set `DATABASE_URL`, `SUPABASE_JWT_SECRET`, `VAPID_*` env vars |
+| **Supabase** | Create a project, copy the connection string and anon key into env vars |
