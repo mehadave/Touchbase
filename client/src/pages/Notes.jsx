@@ -3,7 +3,8 @@ import { Plus, Search, Tag, User, Trash2, Edit3, X, Image, StickyNote, ChevronDo
 import { listNotes, createNote, updateNote, deleteNote } from '../api/notes.js'
 import { listContacts } from '../api/contacts.js'
 import { useUIStore } from '../store/useUIStore.js'
-import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { useConfirm } from '../hooks/useConfirm.js'
+import { NoteCardSkeleton } from '../components/ui/Spinner.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
 import Modal from '../components/ui/Modal.jsx'
 import Button from '../components/ui/Button.jsx'
@@ -170,7 +171,7 @@ function NoteCard({ note, onEdit, onDelete }) {
         </div>
         <button
           onClick={e => { e.stopPropagation(); onDelete() }}
-          className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-300 hover:text-red-400 transition-all"
+          className="md:opacity-0 md:group-hover:opacity-100 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-300 hover:text-red-400 transition-all"
         >
           <Trash2 size={13} />
         </button>
@@ -213,6 +214,7 @@ export default function Notes() {
   const [editTarget, setEditTarget] = useState(null)
   const [saveLoading, setSaveLoading] = useState(false)
   const { addToast } = useUIStore()
+  const { confirm, ConfirmDialog } = useConfirm()
 
   const load = (cat = activeCategory, q = search) => {
     const params = {}
@@ -257,7 +259,8 @@ export default function Notes() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this note?')) return
+    const ok = await confirm({ title: 'Delete note?', message: 'This note will be permanently deleted.' })
+    if (!ok) return
     await deleteNote(id).catch(() => {})
     setNotes(prev => prev.filter(n => n.id !== id))
     addToast('Note deleted')
@@ -310,7 +313,15 @@ export default function Notes() {
       </div>
 
       {/* Notes grid */}
-      {loading ? <PageSpinner /> : notes.length === 0 ? (
+      {loading ? (
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-0">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="break-inside-avoid mb-4">
+              <NoteCardSkeleton />
+            </div>
+          ))}
+        </div>
+      ) : notes.length === 0 ? (
         <EmptyState
           icon="📝"
           title={search ? 'No notes match your search' : 'No notes yet'}
@@ -346,6 +357,8 @@ export default function Notes() {
           loading={saveLoading}
         />
       </Modal>
+
+      <ConfirmDialog />
     </div>
   )
 }

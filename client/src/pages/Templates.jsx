@@ -4,7 +4,8 @@ import Modal from '../components/ui/Modal.jsx'
 import Button from '../components/ui/Button.jsx'
 import Input, { Select } from '../components/ui/Input.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
-import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { TemplateCardSkeleton } from '../components/ui/Spinner.jsx'
+import { useConfirm } from '../hooks/useConfirm.js'
 import { listTemplates, createTemplate, updateTemplate, deleteTemplate } from '../api/templates.js'
 import { useUIStore } from '../store/useUIStore.js'
 
@@ -81,6 +82,7 @@ export default function Templates() {
   const [editTarget, setEditTarget] = useState(null)
   const [saveLoading, setSaveLoading] = useState(false)
   const { addToast } = useUIStore()
+  const { confirm, ConfirmDialog } = useConfirm()
 
   const load = () => listTemplates()
     .then(d => setTemplates(d))
@@ -111,7 +113,8 @@ export default function Templates() {
   }
 
   const handleDelete = async (id, title) => {
-    if (!confirm(`Delete "${title}"?`)) return
+    const ok = await confirm({ title: `Delete "${title}"?`, message: 'This template will be permanently removed.' })
+    if (!ok) return
     await deleteTemplate(id)
     setTemplates(prev => prev.filter(t => t.id !== id))
     addToast('Template deleted')
@@ -122,7 +125,19 @@ export default function Templates() {
     addToast('Template body copied')
   }
 
-  if (loading) return <PageSpinner />
+  if (loading) return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Templates</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Saved message templates for quick outreach</p>
+        </div>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-4">
+        {[...Array(4)].map((_, i) => <TemplateCardSkeleton key={i} />)}
+      </div>
+    </div>
+  )
 
   return (
     <div className="space-y-6">
@@ -195,6 +210,8 @@ export default function Templates() {
       <Modal open={!!editTarget} onClose={() => setEditTarget(null)} title="Edit Template" size="lg">
         <TemplateEditor initial={editTarget || {}} onSave={handleEdit} onCancel={() => setEditTarget(null)} loading={saveLoading} />
       </Modal>
+
+      <ConfirmDialog />
     </div>
   )
 }

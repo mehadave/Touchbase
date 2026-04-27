@@ -7,7 +7,7 @@ import CSVImportModal from '../components/contacts/CSVImportModal.jsx'
 import Button from '../components/ui/Button.jsx'
 import Input, { Select } from '../components/ui/Input.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
-import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { ContactCardSkeleton } from '../components/ui/Spinner.jsx'
 import { useContactsStore } from '../store/useContactsStore.js'
 import { useUIStore } from '../store/useUIStore.js'
 import { useDebounce } from '../hooks/useDebounce.js'
@@ -130,7 +130,11 @@ export default function Contacts() {
       )}
 
       {/* Contact grid */}
-      {loading ? <PageSpinner /> : contacts.length === 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => <ContactCardSkeleton key={i} />)}
+        </div>
+      ) : contacts.length === 0 ? (
         <EmptyState
           icon="👥"
           title="No contacts yet"

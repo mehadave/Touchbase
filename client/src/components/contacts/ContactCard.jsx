@@ -27,7 +27,7 @@ export default function ContactCard({ contact, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="group cursor-pointer bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 hover:border-amber-300 dark:hover:border-amber-700 hover:shadow-md transition-all duration-200 flex flex-col gap-3"
+      className="group cursor-pointer bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 hover:border-amber-300 dark:hover:border-amber-700 hover:shadow-md transition-all duration-200 active:scale-[0.98] flex flex-col gap-3"
     >
       {/* Top row */}
       <div className="flex items-start gap-3">
