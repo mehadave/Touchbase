@@ -3,7 +3,7 @@ import { Plus, Search, Tag, User, Trash2, Edit3, X, Image, StickyNote, ChevronDo
 import { listNotes, createNote, updateNote, deleteNote } from '../api/notes.js'
 import { listContacts } from '../api/contacts.js'
 import { useUIStore } from '../store/useUIStore.js'
-import { useConfirm } from '../hooks/useConfirm.js'
+import { useConfirm } from '../hooks/useConfirm.jsx'
 import { NoteCardSkeleton } from '../components/ui/Spinner.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
 import Modal from '../components/ui/Modal.jsx'

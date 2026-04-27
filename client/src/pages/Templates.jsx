@@ -5,7 +5,7 @@ import Button from '../components/ui/Button.jsx'
 import Input, { Select } from '../components/ui/Input.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
 import { TemplateCardSkeleton } from '../components/ui/Spinner.jsx'
-import { useConfirm } from '../hooks/useConfirm.js'
+import { useConfirm } from '../hooks/useConfirm.jsx'
 import { listTemplates, createTemplate, updateTemplate, deleteTemplate } from '../api/templates.js'
 import { useUIStore } from '../store/useUIStore.js'
 
