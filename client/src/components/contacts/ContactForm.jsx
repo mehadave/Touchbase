@@ -59,40 +59,105 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
       const { data: { text } } = await worker.recognize(file)
       await worker.terminate()
 
-      // Parse extracted text
+      // ── Helpers ────────────────────────────────────────────────────────
+      // Lines of text, cleaned up
       const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
 
-      // Name: usually first substantial line (> 3 chars, no @, no http)
-      const nameLine = lines.find(l => l.length > 3 && !l.includes('@') && !l.includes('http') && !l.includes('|') && !/^\d/.test(l))
-      if (nameLine && !form.fullName) set('fullName', nameLine)
-
-      // Job title: look for lines with common title patterns
-      const titleKeywords = ['director', 'manager', 'engineer', 'developer', 'designer', 'founder', 'ceo', 'cto', 'vp', 'head of', 'lead', 'senior', 'principal', 'analyst', 'consultant', 'president', 'officer']
-      const titleLine = lines.find(l => titleKeywords.some(k => l.toLowerCase().includes(k)) && l.length < 80)
-      if (titleLine && !form.jobTitle) set('jobTitle', titleLine)
-
-      // Company: look for lines after title that look like company names
-      const titleIdx = titleLine ? lines.indexOf(titleLine) : -1
-      if (titleIdx >= 0 && titleIdx + 1 < lines.length) {
-        const companyCandidate = lines[titleIdx + 1]
-        if (companyCandidate && companyCandidate.length < 60 && !companyCandidate.includes('@') && !form.company) {
-          set('company', companyCandidate)
-        }
+      // LinkedIn / app UI noise to skip
+      const UI_NOISE = new Set([
+        'linkedin', 'home', 'my network', 'jobs', 'messaging', 'notifications',
+        'me', 'work', 'search', 'connect', 'follow', 'message', 'more',
+        'connections', 'followers', 'following', 'contact info', 'about',
+        'experience', 'education', 'skills', 'recommendations', 'activity',
+        'see all', 'show more', 'show less', 'view profile', 'open to',
+        'add section', 'premium', 'try premium', '·', '•',
+      ])
+      const isNoise = (l) => {
+        const lower = l.toLowerCase()
+        return (
+          UI_NOISE.has(lower) ||
+          /^[\d,+]+\s*(connection|follower|view|like|comment)/i.test(l) ||
+          /^\d+\s*$/.test(l) ||                      // lone numbers
+          l.length < 3 ||
+          l.includes('linkedin.com/in/') ||           // URL line handled separately
+          /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{4}/i.test(l) // date ranges
+        )
       }
 
-      // Email
+      const cleanLines = lines.filter(l => !isNoise(l))
+
+      // Extended title keywords
+      const TITLE_KEYWORDS = [
+        'director', 'manager', 'engineer', 'developer', 'designer',
+        'founder', 'ceo', 'cto', 'coo', 'cfo', 'cmo', 'cpo',
+        'vp', 'vice president', 'president', 'head of', 'lead', 'leads',
+        'senior', 'principal', 'staff', 'architect', 'analyst', 'associate',
+        'consultant', 'officer', 'partner', 'attorney', 'lawyer', 'counsel',
+        'scientist', 'researcher', 'professor', 'lecturer', 'teacher',
+        'product', 'marketing', 'sales', 'operations', 'finance', 'legal',
+        'coordinator', 'specialist', 'strategist', 'advisor', 'executive',
+        'intern', 'apprentice', 'trainee', 'fellow', 'contractor', 'freelance',
+      ]
+      const looksLikeTitle = (l) =>
+        TITLE_KEYWORDS.some(k => l.toLowerCase().includes(k)) && l.length < 100
+
+      // Is a proper name: 2–4 words, each capitalised, no digits, reasonable length
+      const looksLikeName = (l) => {
+        if (l.length < 4 || l.length > 50) return false
+        if (/\d/.test(l)) return false
+        if (l.includes('@') || l.includes('http') || l.includes('|')) return false
+        const words = l.split(/\s+/)
+        return words.length >= 2 && words.length <= 4 &&
+          words.every(w => /^[A-Z]/.test(w))
+      }
+
+      // ── LinkedIn URL ───────────────────────────────────────────────────
+      const linkedinMatch = text.match(/linkedin\.com\/in\/([\w-]+)/i)
+      if (linkedinMatch && !form.linkedinUrl) {
+        set('linkedinUrl', 'https://linkedin.com/in/' + linkedinMatch[1])
+      }
+
+      // ── Email ──────────────────────────────────────────────────────────
       const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)
       if (emailMatch && !form.email) set('email', emailMatch[0])
 
-      // Phone
-      const phoneMatch = text.match(/(\+?[\d\s\-().]{10,17})/)
+      // ── Phone — strict pattern: must start with +/( or digit groups ───
+      const phoneMatch = text.match(/(\+\d[\d\s\-().]{8,15}|\(?\d{3}\)?[\s.\-]\d{3}[\s.\-]\d{4})/)
       if (phoneMatch && !form.phone) set('phone', phoneMatch[0].trim())
 
-      // LinkedIn URL
-      const linkedinMatch = text.match(/linkedin\.com\/in\/[\w-]+/i)
-      if (linkedinMatch && !form.linkedinUrl) set('linkedinUrl', 'https://' + linkedinMatch[0])
+      // ── Name ───────────────────────────────────────────────────────────
+      // Prefer a proper-name-shaped line; fall back to first clean line
+      const nameLine = cleanLines.find(looksLikeName) || cleanLines[0]
+      if (nameLine && !form.fullName) set('fullName', nameLine)
 
-      // Auto-set source to linkedin
+      // ── Title & Company ─────────────────────────────────────────────────
+      // Pattern 1: "Software Engineer at Google" (LinkedIn headline)
+      const atPattern = /^(.+?)\s+at\s+(.+)$/i
+      const headlineLine = cleanLines.find(l => atPattern.test(l) && looksLikeTitle(l))
+      if (headlineLine) {
+        const m = headlineLine.match(atPattern)
+        if (m) {
+          if (!form.jobTitle) set('jobTitle', m[1].trim())
+          if (!form.company)  set('company',  m[2].trim())
+        }
+      } else {
+        // Pattern 2: title and company on separate lines
+        const titleLine = cleanLines.find(l => looksLikeTitle(l) && l !== nameLine)
+        if (titleLine && !form.jobTitle) set('jobTitle', titleLine)
+
+        // Company: line after the title that doesn't look like a title or location
+        const titleIdx = titleLine ? cleanLines.indexOf(titleLine) : -1
+        if (titleIdx >= 0) {
+          const next = cleanLines.slice(titleIdx + 1).find(l =>
+            l.length < 60 &&
+            !looksLikeTitle(l) &&
+            !l.includes('@') &&
+            !/^(greater|san|new |los |new york|london|toronto|sydney|remote)/i.test(l)
+          )
+          if (next && !form.company) set('company', next)
+        }
+      }
+
       set('source', 'linkedin')
 
     } catch (err) {
