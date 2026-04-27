@@ -22,17 +22,19 @@ export default function BottomTabBar() {
               to={to}
               end={to === '/'}
               className={({ isActive }) =>
-                `flex-1 flex flex-col items-center py-2 gap-0.5 rounded-xl transition-all text-xs ${
+                `flex-1 flex flex-col items-center justify-center min-h-[56px] gap-0.5 rounded-xl transition-all active:scale-95 ${
                   isActive
-                    ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-500'
-                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                    ? 'text-amber-500'
+                    : 'text-gray-400 dark:text-gray-500'
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <Icon size={19} strokeWidth={isActive ? 2.5 : 1.75} />
-                  <span className={`font-medium tracking-tight ${isActive ? 'text-amber-500' : ''}`} style={{ fontSize: 10 }}>
+                  {/* Amber pill indicator above icon when active */}
+                  <div className={`w-5 h-0.5 rounded-full mb-0.5 transition-all ${isActive ? 'bg-amber-500' : 'bg-transparent'}`} />
+                  <Icon size={22} strokeWidth={isActive ? 2.5 : 1.75} />
+                  <span className={`text-[11px] font-medium tracking-tight mt-0.5 ${isActive ? 'text-amber-500' : ''}`}>
                     {label}
                   </span>
                 </>

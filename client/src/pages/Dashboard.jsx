@@ -4,7 +4,7 @@ import { AlertCircle, CalendarClock, ArrowRight } from 'lucide-react'
 import TodayTouchbase from '../components/TodayTouchbase.jsx'
 import StreakBar from '../components/streak/StreakBar.jsx'
 import Avatar from '../components/ui/Avatar.jsx'
-import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { DashboardSkeleton } from '../components/ui/Spinner.jsx'
 import { getTodayTouchbase } from '../api/touchbase.js'
 import { listContacts } from '../api/contacts.js'
 import { stalenessInfo, lastContactedLabel } from '../utils/contact.js'
@@ -43,7 +43,7 @@ export default function Dashboard() {
 
   useEffect(() => { load() }, [])
 
-  if (loading) return <PageSpinner />
+  if (loading) return <DashboardSkeleton />
 
   return (
     <div className="space-y-8">
