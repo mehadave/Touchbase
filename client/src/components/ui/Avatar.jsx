@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 // Deterministic color from name hash
 const COLORS = [
   'bg-amber-500', 'bg-blue-500', 'bg-green-500', 'bg-purple-500',
@@ -23,22 +25,23 @@ const sizeMap = {
 }
 
 export default function Avatar({ name = '', photoPath = null, size = 'md', className = '' }) {
+  const [imgError, setImgError] = useState(false)
   const sizeClass = sizeMap[size] || sizeMap.md
   const color     = COLORS[hashName(name)]
 
-  if (photoPath) {
+  if (photoPath && !imgError) {
     return (
       <img
         src={photoPath}
         alt={name}
         className={`${sizeClass} rounded-full object-cover flex-shrink-0 ${className}`}
-        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
+        onError={() => setImgError(true)}
       />
     )
   }
 
   return (
-    <div className={`${sizeClass} ${color} rounded-full flex items-center justify-center font-semibold text-white flex-shrink-0 ${className}`}>
+    <div className={`${sizeClass} ${color} rounded-full flex items-center justify-center font-semibold text-white flex-shrink-0 select-none ${className}`}>
       {initials(name)}
     </div>
   )

@@ -48,7 +48,7 @@ export default function Sidebar() {
             to={to}
             end={to === '/'}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              `relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive
                   ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
@@ -57,6 +57,10 @@ export default function Sidebar() {
           >
             {({ isActive }) => (
               <>
+                {/* Active left-edge indicator */}
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-amber-500 rounded-r-full" />
+                )}
                 <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                 <span>{label}</span>
                 {label === 'Streak' && streak.currentStreak > 0 && (
