@@ -6,7 +6,7 @@ export default function TopBar() {
   const { darkMode, toggleDarkMode, setSearchOpen } = useUIStore()
 
   return (
-    <header className="md:hidden sticky top-0 z-20 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center gap-3">
+    <header className="md:hidden sticky top-0 z-20 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200/70 dark:border-gray-800/70 px-4 py-3 flex items-center gap-3">
       <Logo size="sm" />
       <div className="flex-1" />
       <button

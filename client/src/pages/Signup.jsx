@@ -16,6 +16,11 @@ function GoogleIcon() {
   )
 }
 
+const inputClass = `w-full py-3 rounded-xl border border-gray-200 dark:border-gray-700
+  bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white
+  focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent
+  placeholder-gray-400 text-sm transition`
+
 export default function Signup() {
   const navigate    = useNavigate()
   const [name,      setName]     = useState('')
@@ -30,10 +35,7 @@ export default function Signup() {
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.')
-      return
-    }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
     setLoading(true)
     try {
       const { error: err } = await supabase.auth.signUp({
@@ -67,21 +69,24 @@ export default function Signup() {
 
   if (confirmed) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center p-4">
-        <div className="w-full max-w-md text-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full bg-amber-400/20 dark:bg-amber-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-orange-400/15 dark:bg-orange-500/10 blur-3xl" />
+        <div className="w-full max-w-md text-center relative z-10">
           <div className="flex justify-center mb-8"><Logo size="lg" /></div>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-8">
-            <div className="w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl shadow-gray-200/60 dark:shadow-black/40 border border-gray-100 dark:border-gray-800 p-8">
+            <div className="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-4">
               <Mail size={24} className="text-amber-500" />
             </div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Check your email</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              We sent a confirmation link to <strong className="text-gray-700 dark:text-gray-300">{email}</strong>.
-              Click it to activate your account, then come back to sign in.
+            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+              We sent a confirmation link to{' '}
+              <strong className="text-gray-700 dark:text-gray-300">{email}</strong>.
+              Click it to activate your account, then sign in.
             </p>
             <Link
               to="/login"
-              className="mt-6 inline-block py-2.5 px-6 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm transition"
+              className="mt-6 inline-flex items-center py-2.5 px-6 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm transition shadow-lg shadow-amber-500/25"
             >
               Back to Sign in
             </Link>
@@ -93,25 +98,23 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Decorative blobs */}
+      <div className="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full bg-amber-400/20 dark:bg-amber-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-orange-400/15 dark:bg-orange-500/10 blur-3xl" />
 
-        <div className="flex justify-center mb-8">
+      <div className="w-full max-w-md relative z-10">
+        <div className="flex flex-col items-center mb-8">
           <Logo size="lg" />
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">relationships that actually last</p>
         </div>
 
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-6 -mt-4">
-          Your personal networking CRM
-        </p>
-
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 text-center">Create your account</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">
-            Start building meaningful connections
-          </p>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl shadow-gray-200/60 dark:shadow-black/40 border border-gray-100 dark:border-gray-800 p-8">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1 text-center">Create your account</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">Start building meaningful connections</p>
 
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400">
+            <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400">
               {error}
             </div>
           )}
@@ -121,12 +124,9 @@ export default function Signup() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={googleLoading || loading}
-            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-200 font-medium text-sm transition disabled:opacity-60 disabled:cursor-not-allowed mb-5"
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium text-sm transition-all active:scale-[0.98] shadow-sm disabled:opacity-60 disabled:cursor-not-allowed mb-5"
           >
-            {googleLoading
-              ? <Loader2 size={18} className="animate-spin" />
-              : <GoogleIcon />
-            }
+            {googleLoading ? <Loader2 size={18} className="animate-spin" /> : <GoogleIcon />}
             Continue with Google
           </button>
 
@@ -141,74 +141,35 @@ export default function Signup() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Full name
-              </label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Full name</label>
               <div className="relative">
                 <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  required
-                  autoComplete="name"
-                  placeholder="Alex Johnson"
-                  className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700
-                             bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white
-                             focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent
-                             placeholder-gray-400 text-sm transition"
-                />
+                <input type="text" value={name} onChange={e => setName(e.target.value)} required autoComplete="name"
+                  placeholder="Alex Johnson" className={`${inputClass} pl-9 pr-4`} />
               </div>
             </div>
 
-            {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Email
-              </label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700
-                             bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white
-                             focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent
-                             placeholder-gray-400 text-sm transition"
-                />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email"
+                  placeholder="you@example.com" className={`${inputClass} pl-9 pr-4`} />
               </div>
             </div>
 
-            {/* Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Password <span className="text-gray-400 font-normal">(min. 6 characters)</span>
               </label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type={showPw ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  autoComplete="new-password"
-                  placeholder="••••••••"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700
-                             bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white
-                             focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent
-                             placeholder-gray-400 text-sm transition"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
+                <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                  required autoComplete="new-password" placeholder="••••••••"
+                  className={`${inputClass} pl-9 pr-10`} />
+                <button type="button" onClick={() => setShowPw(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                   {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -217,8 +178,9 @@ export default function Signup() {
             <button
               type="submit"
               disabled={loading || googleLoading}
-              className="w-full py-2.5 px-4 rounded-lg bg-amber-500 hover:bg-amber-600 active:bg-amber-700
-                         text-white font-semibold text-sm transition disabled:opacity-60 disabled:cursor-not-allowed
+              className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98]
+                         text-white font-semibold text-sm transition-all shadow-lg shadow-amber-500/25
+                         disabled:opacity-60 disabled:cursor-not-allowed
                          flex items-center justify-center gap-2 mt-2"
             >
               {loading ? <><Loader2 size={16} className="animate-spin" /> Creating account…</> : 'Create account'}
@@ -227,9 +189,7 @@ export default function Signup() {
 
           <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
             Already have an account?{' '}
-            <Link to="/login" className="text-amber-500 hover:text-amber-600 font-medium">
-              Sign in
-            </Link>
+            <Link to="/login" className="text-amber-500 hover:text-amber-600 font-medium">Sign in</Link>
           </p>
         </div>
 

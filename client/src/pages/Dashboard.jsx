@@ -51,7 +51,7 @@ export default function Dashboard() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-          {format(new Date(), 'EEEE, MMMM d')} · relationships don't maintain themselves 😄
+          {format(new Date(), 'EEEE, MMMM d')} · stay close to the people who matter
         </p>
       </div>
 
@@ -80,26 +80,31 @@ export default function Dashboard() {
           </div>
 
           {overdue.length === 0 ? (
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 text-center">
-              <p className="text-sm text-gray-500">No overdue contacts — you're on top of things!</p>
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 p-6 text-center">
+              <p className="text-2xl mb-2">🎉</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">All caught up!</p>
+              <p className="text-xs text-gray-400 mt-0.5">No overdue contacts right now.</p>
             </div>
           ) : (
             <div className="space-y-2">
               {overdue.map(contact => {
                 const info = stalenessInfo(contact)
                 return (
-                  <div key={contact.id} className="flex items-center gap-3 bg-white dark:bg-gray-900 rounded-xl border border-red-100 dark:border-red-900/30 p-3">
+                  <div key={contact.id} className="flex items-center gap-3 bg-white dark:bg-gray-900 rounded-xl border border-red-100 dark:border-red-900/30 p-3 hover:border-red-200 dark:hover:border-red-800 transition-colors">
                     <Avatar name={contact.fullName} photoPath={contact.photoPath} size="sm" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{contact.fullName}</p>
-                      <p className="text-xs text-red-500">{info.label}</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{contact.fullName}</p>
+                      <p className="text-xs text-gray-400 truncate">{contact.company || info.label}</p>
                     </div>
-                    <Link
-                      to={`/contacts`}
-                      className="text-xs bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-2 py-1 rounded-lg font-medium hover:bg-red-100 transition-colors"
-                    >
-                      Reach out
-                    </Link>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-[10px] font-medium text-red-500 whitespace-nowrap">{info.label}</span>
+                      <Link
+                        to="/contacts"
+                        className="text-[10px] bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-md font-medium hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                      >
+                        Reach out →
+                      </Link>
+                    </div>
                   </div>
                 )
               })}
@@ -120,21 +125,23 @@ export default function Dashboard() {
           </div>
 
           {upcoming.length === 0 ? (
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 text-center">
-              <p className="text-sm text-gray-500">Nothing due in the next 7 days.</p>
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 p-6 text-center">
+              <p className="text-2xl mb-2">📅</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Clear week ahead</p>
+              <p className="text-xs text-gray-400 mt-0.5">No follow-ups due in the next 7 days.</p>
             </div>
           ) : (
             <div className="space-y-2">
               {upcoming.map(contact => {
                 const info = stalenessInfo(contact)
                 return (
-                  <div key={contact.id} className="flex items-center gap-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3">
+                  <div key={contact.id} className="flex items-center gap-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 hover:border-blue-200 dark:hover:border-blue-800/50 transition-colors">
                     <Avatar name={contact.fullName} photoPath={contact.photoPath} size="sm" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{contact.fullName}</p>
-                      <p className="text-xs text-gray-500">{contact.company}</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{contact.fullName}</p>
+                      <p className="text-xs text-gray-400 truncate">{contact.company || contact.jobTitle || '—'}</p>
                     </div>
-                    <span className="text-xs text-blue-500 font-medium whitespace-nowrap">{info.label}</span>
+                    <span className="text-[10px] font-semibold text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md whitespace-nowrap">{info.label}</span>
                   </div>
                 )
               })}

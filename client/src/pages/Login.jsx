@@ -56,22 +56,25 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Decorative blobs */}
+      <div className="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full bg-amber-400/20 dark:bg-amber-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-orange-400/15 dark:bg-orange-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-amber-300/10 dark:bg-amber-500/5 blur-3xl" />
 
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
+      <div className="w-full max-w-md relative z-10">
+        {/* Logo + tagline */}
+        <div className="flex flex-col items-center mb-8">
           <Logo size="lg" />
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
+            relationships that actually last
+          </p>
         </div>
 
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-6 -mt-4">
-          Your personal networking CRM
-        </p>
-
         {/* Card */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 text-center">Welcome back</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">Sign in to your Touchbase account</p>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl shadow-gray-200/60 dark:shadow-black/40 border border-gray-100 dark:border-gray-800 p-8">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1 text-center">Welcome back</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">Sign in to continue</p>
 
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400">
@@ -84,7 +87,7 @@ export default function Login() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={googleLoading || loading}
-            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-200 font-medium text-sm transition disabled:opacity-60 disabled:cursor-not-allowed mb-5"
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium text-sm transition-all active:scale-[0.98] shadow-sm disabled:opacity-60 disabled:cursor-not-allowed mb-5"
           >
             {googleLoading
               ? <Loader2 size={18} className="animate-spin" />
@@ -118,7 +121,7 @@ export default function Login() {
                   required
                   autoComplete="email"
                   placeholder="you@example.com"
-                  className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700
+                  className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700
                              bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white
                              focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent
                              placeholder-gray-400 text-sm transition"
@@ -140,7 +143,7 @@ export default function Login() {
                   required
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700
+                  className="w-full pl-9 pr-10 py-3 rounded-xl border border-gray-200 dark:border-gray-700
                              bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white
                              focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent
                              placeholder-gray-400 text-sm transition"
@@ -159,8 +162,9 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading || googleLoading}
-              className="w-full py-2.5 px-4 rounded-lg bg-amber-500 hover:bg-amber-600 active:bg-amber-700
-                         text-white font-semibold text-sm transition disabled:opacity-60 disabled:cursor-not-allowed
+              className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98]
+                         text-white font-semibold text-sm transition-all shadow-lg shadow-amber-500/25
+                         disabled:opacity-60 disabled:cursor-not-allowed
                          flex items-center justify-center gap-2 mt-2"
             >
               {loading ? <><Loader2 size={16} className="animate-spin" /> Signing in…</> : 'Sign in'}
