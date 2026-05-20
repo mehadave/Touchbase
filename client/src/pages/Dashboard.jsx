@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertCircle, CalendarClock, ArrowRight } from 'lucide-react'
+import { AlertCircle, CalendarClock, ArrowRight, Zap } from 'lucide-react'
 import TodayTouchbase from '../components/TodayTouchbase.jsx'
 import StreakBar from '../components/streak/StreakBar.jsx'
 import Avatar from '../components/ui/Avatar.jsx'
 import { DashboardSkeleton } from '../components/ui/Spinner.jsx'
 import { getTodayTouchbase } from '../api/touchbase.js'
 import { listContacts } from '../api/contacts.js'
-import { stalenessInfo, lastContactedLabel } from '../utils/contact.js'
+import { stalenessInfo } from '../utils/contact.js'
 import { format, addDays } from 'date-fns'
 
 export default function Dashboard() {
@@ -29,7 +29,7 @@ export default function Dashboard() {
         return info.status === 'overdue'
       }).slice(0, 5))
 
-      const in7 = format(addDays(new Date(), 7), 'yyyy-MM-dd')
+      const in7     = format(addDays(new Date(), 7), 'yyyy-MM-dd')
       const todayStr = format(new Date(), 'yyyy-MM-dd')
       setUpcoming(allContacts.filter(c =>
         c.nextFollowUp && c.nextFollowUp > todayStr && c.nextFollowUp <= in7
@@ -46,109 +46,151 @@ export default function Dashboard() {
   if (loading) return <DashboardSkeleton />
 
   return (
-    <div className="space-y-8">
-      {/* Page title */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-          {format(new Date(), 'EEEE, MMMM d')} · stay close to the people who matter
-        </p>
+    <div className="space-y-8 pb-8">
+
+      {/* ── Page header ──────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Good {getGreeting()}&nbsp;👋
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            {format(new Date(), 'EEEE, MMMM d')}
+          </p>
+        </div>
+        <Link
+          to="/contacts"
+          className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold
+                     px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600
+                     text-white shadow-sm shadow-amber-500/30 transition-all active:scale-[0.97]"
+        >
+          <Zap size={13} /> Add contact
+        </Link>
       </div>
 
-      {/* Streak bar */}
+      {/* ── Streak ───────────────────────────────────────── */}
       <StreakBar />
 
-      {/* Today's Touchbase */}
+      {/* ── Today's Touchbase ────────────────────────────── */}
       <section>
-        <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-          👋 Today's Touchbase
-        </h2>
+        <SectionHeader title="Today's Touchbase" emoji="🎯" />
         <TodayTouchbase data={touchbaseData} onRefresh={load} />
       </section>
 
+      {/* ── Two-column grid ──────────────────────────────── */}
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Overdue connections */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <AlertCircle size={16} className="text-red-500" />
-              Overdue Connections
-            </h2>
-            <Link to="/contacts?overdue=true" className="text-xs text-amber-500 hover:text-amber-600 font-medium flex items-center gap-1">
-              View all <ArrowRight size={12} />
-            </Link>
-          </div>
 
+        {/* Overdue */}
+        <section>
+          <SectionHeader
+            title="Overdue"
+            emoji={null}
+            icon={<AlertCircle size={15} className="text-red-500" />}
+            action={<Link to="/contacts?overdue=true" className="text-xs text-amber-500 hover:text-amber-600 font-semibold flex items-center gap-0.5 transition-colors">View all <ArrowRight size={11} /></Link>}
+          />
           {overdue.length === 0 ? (
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 p-6 text-center">
-              <p className="text-2xl mb-2">🎉</p>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">All caught up!</p>
-              <p className="text-xs text-gray-400 mt-0.5">No overdue contacts right now.</p>
-            </div>
+            <EmptyState emoji="🎉" title="All caught up!" body="No overdue contacts right now." />
           ) : (
-            <div className="space-y-2">
+            <ul className="space-y-2">
               {overdue.map(contact => {
                 const info = stalenessInfo(contact)
                 return (
-                  <div key={contact.id} className="flex items-center gap-3 bg-white dark:bg-gray-900 rounded-xl border border-red-100 dark:border-red-900/30 p-3 hover:border-red-200 dark:hover:border-red-800 transition-colors">
-                    <Avatar name={contact.fullName} photoPath={contact.photoPath} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{contact.fullName}</p>
-                      <p className="text-xs text-gray-400 truncate">{contact.company || info.label}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="text-[10px] font-medium text-red-500 whitespace-nowrap">{info.label}</span>
-                      <Link
-                        to="/contacts"
-                        className="text-[10px] bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-md font-medium hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
-                      >
-                        Reach out →
-                      </Link>
-                    </div>
-                  </div>
+                  <li key={contact.id}>
+                    <Link
+                      to="/contacts"
+                      className="flex items-center gap-3 bg-white dark:bg-gray-900
+                                 rounded-xl border border-red-100 dark:border-red-900/30
+                                 hover:border-red-300 dark:hover:border-red-700/50
+                                 p-3 transition-all group"
+                    >
+                      <Avatar name={contact.fullName} photoPath={contact.photoPath} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{contact.fullName}</p>
+                        <p className="text-xs text-gray-400 truncate">{contact.company || info.label}</p>
+                      </div>
+                      <span className="text-[10px] font-semibold text-red-500 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg whitespace-nowrap shrink-0">
+                        {info.label}
+                      </span>
+                    </Link>
+                  </li>
                 )
               })}
-            </div>
+            </ul>
           )}
         </section>
 
-        {/* Upcoming this week */}
+        {/* Upcoming */}
         <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <CalendarClock size={16} className="text-blue-500" />
-              Upcoming This Week
-            </h2>
-            <Link to="/calendar" className="text-xs text-amber-500 hover:text-amber-600 font-medium flex items-center gap-1">
-              Calendar <ArrowRight size={12} />
-            </Link>
-          </div>
-
+          <SectionHeader
+            title="This Week"
+            emoji={null}
+            icon={<CalendarClock size={15} className="text-blue-500" />}
+            action={<Link to="/calendar" className="text-xs text-amber-500 hover:text-amber-600 font-semibold flex items-center gap-0.5 transition-colors">Calendar <ArrowRight size={11} /></Link>}
+          />
           {upcoming.length === 0 ? (
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 p-6 text-center">
-              <p className="text-2xl mb-2">📅</p>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Clear week ahead</p>
-              <p className="text-xs text-gray-400 mt-0.5">No follow-ups due in the next 7 days.</p>
-            </div>
+            <EmptyState emoji="📅" title="Clear week ahead" body="No follow-ups due in the next 7 days." />
           ) : (
-            <div className="space-y-2">
+            <ul className="space-y-2">
               {upcoming.map(contact => {
                 const info = stalenessInfo(contact)
                 return (
-                  <div key={contact.id} className="flex items-center gap-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 hover:border-blue-200 dark:hover:border-blue-800/50 transition-colors">
-                    <Avatar name={contact.fullName} photoPath={contact.photoPath} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{contact.fullName}</p>
-                      <p className="text-xs text-gray-400 truncate">{contact.company || contact.jobTitle || '—'}</p>
-                    </div>
-                    <span className="text-[10px] font-semibold text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md whitespace-nowrap">{info.label}</span>
-                  </div>
+                  <li key={contact.id}>
+                    <Link
+                      to="/calendar"
+                      className="flex items-center gap-3 bg-white dark:bg-gray-900
+                                 rounded-xl border border-gray-200 dark:border-gray-800
+                                 hover:border-blue-200 dark:hover:border-blue-800/50
+                                 p-3 transition-all group"
+                    >
+                      <Avatar name={contact.fullName} photoPath={contact.photoPath} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{contact.fullName}</p>
+                        <p className="text-xs text-gray-400 truncate">{contact.company || contact.jobTitle || '—'}</p>
+                      </div>
+                      <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg whitespace-nowrap shrink-0">
+                        {info.label}
+                      </span>
+                    </Link>
+                  </li>
                 )
               })}
-            </div>
+            </ul>
           )}
         </section>
       </div>
+    </div>
+  )
+}
+
+/* ── Small helpers ─────────────────────────────────────────── */
+
+function getGreeting() {
+  const h = new Date().getHours()
+  if (h < 12) return 'morning'
+  if (h < 17) return 'afternoon'
+  return 'evening'
+}
+
+function SectionHeader({ title, emoji, icon, action }) {
+  return (
+    <div className="flex items-center justify-between mb-3">
+      <h2 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
+        {emoji && <span>{emoji}</span>}
+        {icon}
+        {title}
+      </h2>
+      {action}
+    </div>
+  )
+}
+
+function EmptyState({ emoji, title, body }) {
+  return (
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-dashed
+                    border-gray-200 dark:border-gray-700 p-8 text-center">
+      <span className="text-3xl block mb-2">{emoji}</span>
+      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">{title}</p>
+      <p className="text-xs text-gray-400 mt-0.5">{body}</p>
     </div>
   )
 }
