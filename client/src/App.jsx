@@ -61,7 +61,8 @@ export default function App() {
   const fetchSettings = useSettingsStore(s => s.fetchSettings)
   const fetchStreak   = useStreakStore(s => s.fetchStreak)
   const { setSession, session, isLoading } = useAuthStore()
-  const [splashVisible, setSplashVisible] = useState(true)
+  // Only show splash on mobile (< 768px); desktop gets no loading overlay
+  const [splashVisible, setSplashVisible] = useState(() => window.innerWidth < 768)
   const [splashFading, setSplashFading]   = useState(false)
 
   useEffect(() => {
@@ -84,7 +85,7 @@ export default function App() {
   useEffect(() => {
     if (!isLoading && splashVisible) {
       setSplashFading(true)
-      const t = setTimeout(() => setSplashVisible(false), 380)
+      const t = setTimeout(() => setSplashVisible(false), 560)
       return () => clearTimeout(t)
     }
   }, [isLoading])

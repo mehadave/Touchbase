@@ -36,7 +36,7 @@ export default {
         'fade-in':        'fadeIn 0.2s ease-out',
         'toast-in':       'toastIn 0.3s ease-out',
         'toast-out':      'toastOut 0.25s ease-in forwards',
-        'splash-fade':    'splashFade 0.4s ease-in forwards',
+        'splash-fade':    'splashFade 0.55s ease-out forwards',
       },
       keyframes: {
         slideInRight: {
@@ -60,8 +60,9 @@ export default {
           to:   { transform: 'translateY(100%) scale(0.9)', opacity: 0 },
         },
         splashFade: {
-          from: { opacity: 1, transform: 'scale(1)' },
-          to:   { opacity: 0, transform: 'scale(0.95)' },
+          '0%':   { opacity: 1 },
+          '40%':  { opacity: 1 },
+          '100%': { opacity: 0 },
         },
       },
     },
