@@ -181,7 +181,7 @@ export default function Landing() {
                        text-white px-4 py-2 rounded-xl shadow-md shadow-amber-500/25 transition-all
                        active:scale-[0.97]"
           >
-            Get started free <ChevronRight size={14} />
+            Get started <ChevronRight size={14} />
           </Link>
         </div>
       </motion.nav>
@@ -247,7 +247,7 @@ export default function Landing() {
                          text-white font-bold px-8 py-4 rounded-2xl shadow-xl shadow-amber-500/30
                          transition-all active:scale-[0.97] text-base"
             >
-              Start for free
+              Get started
               <motion.span
                 animate={{ x: [0, 4, 0] }}
                 transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
@@ -272,7 +272,7 @@ export default function Landing() {
             variants={fadeUp}
             className="text-xs text-gray-400 dark:text-gray-600 mt-6"
           >
-            Free forever · No credit card needed · Works as a PWA on iOS & Android
+            Works as a PWA on iOS & Android
           </motion.p>
         </motion.div>
 
@@ -440,14 +440,14 @@ export default function Landing() {
         </div>
       </Section>
 
-      {/* ── Pricing / Plan ─────────────────────────────────────── */}
+      {/* ── Everything included ────────────────────────────────── */}
       <Section className="py-24 px-6 bg-gray-50 dark:bg-gray-900/50">
-        <div className="max-w-md mx-auto text-center">
-          <motion.div variants={fadeUp} className="mb-10">
-            <p className="text-xs font-semibold uppercase tracking-widest text-amber-500 mb-3">Pricing</p>
-            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3">Free. Forever.</h2>
+        <div className="max-w-2xl mx-auto">
+          <motion.div variants={fadeUp} className="text-center mb-10">
+            <p className="text-xs font-semibold uppercase tracking-widest text-amber-500 mb-3">What's included</p>
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3">Everything you need.</h2>
             <p className="text-gray-500 dark:text-gray-400">
-              No tiers, no paywalls. Everything below, for everyone.
+              All features, no compromises.
             </p>
           </motion.div>
 
@@ -456,12 +456,7 @@ export default function Landing() {
             className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800
                        shadow-xl shadow-gray-200/50 dark:shadow-black/40 p-8"
           >
-            <div className="flex items-baseline justify-center gap-1 mb-8">
-              <span className="text-5xl font-black">$0</span>
-              <span className="text-gray-400 text-sm">/ forever</span>
-            </div>
-
-            <ul className="space-y-3 mb-8 text-left">
+            <ul className="grid sm:grid-cols-2 gap-3 mb-8">
               {planFeatures.map(f => (
                 <li key={f} className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/30
@@ -479,7 +474,7 @@ export default function Landing() {
                          py-4 rounded-2xl shadow-lg shadow-amber-500/30 transition-all
                          active:scale-[0.97] text-center"
             >
-              Create your free account
+              Create your account
             </Link>
           </motion.div>
         </div>
@@ -509,7 +504,7 @@ export default function Landing() {
                            px-8 py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all
                            active:scale-[0.97] text-base"
               >
-                Get started — it&apos;s free <ArrowRight size={18} />
+                Get started <ArrowRight size={18} />
               </Link>
               <Link
                 to="/login"
