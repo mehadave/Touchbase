@@ -9,10 +9,14 @@ if (!supabaseUrl || !supabaseAnon) {
   )
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseAnon || '', {
-  auth: {
-    persistSession:   true,
-    autoRefreshToken: true,
-    storageKey:       'touchbase-auth',
-  },
-})
+export const supabase = createClient(
+  supabaseUrl  || 'https://placeholder.supabase.co',
+  supabaseAnon || 'placeholder-anon-key',
+  {
+    auth: {
+      persistSession:   true,
+      autoRefreshToken: true,
+      storageKey:       'touchbase-auth',
+    },
+  }
+)
