@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Edit3, Trash2, Copy } from 'lucide-react'
+import { Plus, Edit3, Trash2, Copy, MessageSquare } from 'lucide-react'
 import Modal from '../components/ui/Modal.jsx'
 import Button from '../components/ui/Button.jsx'
 import Input, { Select } from '../components/ui/Input.jsx'
@@ -153,7 +153,7 @@ export default function Templates() {
 
       {templates.length === 0 ? (
         <EmptyState
-          icon="✉️"
+          icon={<MessageSquare size={24} className="text-gray-400" />}
           title="No templates yet"
           description="Create message templates to speed up your outreach. Use {name}, {company}, and {title} to personalise automatically."
           action={<Button onClick={() => setShowAdd(true)}><Plus size={14} /> Create your first template</Button>}

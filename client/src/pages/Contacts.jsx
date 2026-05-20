@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Plus, Upload, SlidersHorizontal, Search, X } from 'lucide-react'
+import { Plus, Upload, SlidersHorizontal, Search, X, Users } from 'lucide-react'
 import ContactCard from '../components/contacts/ContactCard.jsx'
 import ContactDetail from '../components/contacts/ContactDetail.jsx'
 import ContactForm from '../components/contacts/ContactForm.jsx'
@@ -136,7 +136,7 @@ export default function Contacts() {
         </div>
       ) : contacts.length === 0 ? (
         <EmptyState
-          icon="👥"
+          icon={<Users size={24} className="text-gray-400" />}
           title="No contacts yet"
           description="Add your first contact to start building your network. You can also import from a CSV file."
           action={<Button onClick={() => setShowAdd(true)}><Plus size={14} /> Add your first contact</Button>}

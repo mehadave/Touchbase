@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Search, Tag, User, Trash2, Edit3, X, Image, StickyNote, ChevronDown, Check } from 'lucide-react'
+import { Plus, Search, User, Trash2, X, StickyNote, ChevronDown, Check } from 'lucide-react'
 import { listNotes, createNote, updateNote, deleteNote } from '../api/notes.js'
 import { listContacts } from '../api/contacts.js'
 import { useUIStore } from '../store/useUIStore.js'
@@ -323,7 +323,7 @@ export default function Notes() {
         </div>
       ) : notes.length === 0 ? (
         <EmptyState
-          icon="📝"
+          icon={<StickyNote size={24} className="text-gray-400" />}
           title={search ? 'No notes match your search' : 'No notes yet'}
           description={search ? 'Try different keywords.' : 'Capture meeting notes, ideas, and follow-ups linked to your contacts.'}
           action={!search && <Button onClick={() => setShowEditor(true)}><Plus size={14} /> Create your first note</Button>}

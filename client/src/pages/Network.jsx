@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom'
-import { Plus, MapPin, Calendar, Globe, Users } from 'lucide-react'
+import { Plus, MapPin, Calendar, Globe, Users, User, Presentation, Briefcase } from 'lucide-react'
 import ContactCard from '../components/contacts/ContactCard.jsx'
 import ContactDetail from '../components/contacts/ContactDetail.jsx'
 import ConferenceDetail from '../components/conferences/ConferenceDetail.jsx'
@@ -36,7 +36,7 @@ function CategoryContacts({ category }) {
 
   if (loading) return <PageSpinner />
   if (!contacts.length) return (
-    <EmptyState icon="👤" title={`No ${category} contacts yet`}
+    <EmptyState icon={<User size={24} className="text-gray-400" />} title={`No ${category} contacts yet`}
       description={`Add contacts in the ${category} category to see them here.`} />
   )
   return (
@@ -100,7 +100,7 @@ function ProfessionalNetwork() {
         </div>
 
         {conferences.length === 0 ? (
-          <EmptyState icon="🎪" title="No conferences yet"
+          <EmptyState icon={<Presentation size={24} className="text-gray-400" />} title="No conferences yet"
             description="Track the conferences you attend and the people you meet there."
             action={<Button size="sm" onClick={() => setShowAddConf(true)}><Plus size={14} /> Add Conference</Button>} />
         ) : (
@@ -137,7 +137,7 @@ function ProfessionalNetwork() {
           <Users size={18} className="text-sky-500" /> LinkedIn Connections
         </h2>
         {contacts.filter(c => c.source === 'linkedin' || c.linkedinUrl).length === 0 ? (
-          <EmptyState icon="💼" title="No LinkedIn contacts"
+          <EmptyState icon={<Briefcase size={24} className="text-gray-400" />} title="No LinkedIn contacts"
             description="Add contacts with a LinkedIn URL or 'LinkedIn' source to see them here." />
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -153,7 +153,7 @@ function ProfessionalNetwork() {
       <section>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">All Professional Contacts</h2>
         {contacts.length === 0 ? (
-          <EmptyState icon="💼" title="No professional contacts yet" />
+          <EmptyState icon={<Briefcase size={24} className="text-gray-400" />} title="No professional contacts yet" />
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {contacts.map(c => (
