@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Font pairing: Plus Jakarta Sans (headings) + Inter (body) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -15,6 +16,11 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Display headings use Plus Jakarta Sans */
+  h1, h2 {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  }
+
   body {
     @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100;
     margin: 0;
@@ -24,6 +30,14 @@
     min-height: 100svh;
     display: flex;
     flex-direction: column;
+  }
+
+  /* Global focus-visible for elements that don't already manage their own outline.
+     Elements using Tailwind's focus:outline-none override this via higher specificity. */
+  :focus-visible:not([class*="focus"]) {
+    outline: 2px solid #f59e0b;
+    outline-offset: 2px;
+    border-radius: 6px;
   }
 
   /* Scrollbar styling */
@@ -49,6 +63,11 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  /* Display font utility class */
+  .font-display {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   }
 }
 

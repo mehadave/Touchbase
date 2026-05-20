@@ -24,7 +24,7 @@ export default function Button({
       {...props}
       disabled={disabled || loading}
       className={`
-        inline-flex items-center justify-center gap-2 font-medium
+        inline-flex items-center justify-center gap-2 font-medium cursor-pointer
         transition-all duration-150 focus:outline-none focus-visible:ring-2
         focus-visible:ring-amber-500 focus-visible:ring-offset-2
         active:scale-[0.97] disabled:active:scale-100

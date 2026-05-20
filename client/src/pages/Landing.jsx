@@ -29,7 +29,7 @@ const scaleIn = {
 
 /* ─── reusable section wrapper ───────────────────────────────────── */
 function Section({ children, className = '' }) {
-  const ref  = useRef(null)
+  const ref    = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
   return (
     <motion.section
@@ -151,9 +151,9 @@ const planFeatures = [
    LANDING PAGE
    ════════════════════════════════════════════════════════════════════ */
 export default function Landing() {
-  const heroRef   = useRef(null)
+  const heroRef     = useRef(null)
   const { scrollY } = useScroll()
-  const blobY     = useTransform(scrollY, [0, 600], [0, -80])
+  const blobY       = useTransform(scrollY, [0, 600], [0, -80])
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
 
   return (
@@ -162,7 +162,7 @@ export default function Landing() {
       {/* ── Navbar ─────────────────────────────────────────────── */}
       <motion.nav
         initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0,  opacity: 1 }}
+        animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
         className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 md:px-10 h-16
                    bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-900"

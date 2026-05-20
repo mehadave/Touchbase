@@ -39,7 +39,10 @@ export default function Modal({ open, onClose, title, children, size = 'md', cla
             <h2 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h2>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors"
+              aria-label="Close"
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500
+                         transition-colors duration-150 cursor-pointer
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1"
             >
               <X size={16} />
             </button>
@@ -48,7 +51,10 @@ export default function Modal({ open, onClose, title, children, size = 'md', cla
         {!title && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 z-10 transition-colors"
+            aria-label="Close"
+            className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 z-10
+                       transition-colors duration-150 cursor-pointer
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1"
           >
             <X size={16} />
           </button>
@@ -82,15 +88,17 @@ export function Drawer({ open, onClose, title, children, side = 'right' }) {
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={onClose} />
 
       {/* Drawer panel */}
-      <div className={`
-        relative ml-auto w-full max-w-xl h-full bg-white dark:bg-gray-900
-        shadow-2xl flex flex-col animate-slide-in-right
-        overflow-hidden
-      `}>
+      <div className="relative ml-auto w-full max-w-xl h-full bg-white dark:bg-gray-900 shadow-2xl flex flex-col animate-slide-in-right overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
           <h2 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors">
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500
+                       transition-colors duration-150 cursor-pointer
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1"
+          >
             <X size={16} />
           </button>
         </div>
