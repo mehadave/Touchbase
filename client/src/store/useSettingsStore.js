@@ -21,8 +21,16 @@ export const useSettingsStore = create((set, get) => ({
   },
 
   updateSettings: async (updates) => {
-    const data = await settingsApi.updateSettings(updates)
-    set({ settings: { ...get().settings, ...data } })
-    return data
+    // Optimistic update — apply immediately so UI responds instantly
+    const previous = get().settings
+    set({ settings: { ...previous, ...updates } })
+    try {
+      const data = await settingsApi.updateSettings(updates)
+      set({ settings: { ...get().settings, ...data } })
+      return data
+    } catch (err) {
+      set({ settings: previous }) // roll back on failure
+      throw err
+    }
   },
 }))
