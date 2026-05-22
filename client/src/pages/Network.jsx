@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useDelayedLoading } from '../hooks/useDelayedLoading.js'
 import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom'
 import { Plus, MapPin, Calendar, Globe, Users, User, Presentation, Briefcase } from 'lucide-react'
 import ContactCard from '../components/contacts/ContactCard.jsx'
@@ -9,7 +8,6 @@ import ConferenceForm from '../components/conferences/ConferenceForm.jsx'
 import Button from '../components/ui/Button.jsx'
 import Modal from '../components/ui/Modal.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
-import { NetworkSkeleton, ContactCardSkeleton } from '../components/ui/Spinner.jsx'
 import { listContacts } from '../api/contacts.js'
 import { listConferences, createConference } from '../api/conferences.js'
 import { useUIStore } from '../store/useUIStore.js'
@@ -24,23 +22,15 @@ const subNavClass = ({ isActive }) =>
 
 function CategoryContacts({ category }) {
   const [contacts, setContacts]     = useState([])
-  const [loading, setLoading]       = useState(true)
   const [selected, setSelected]     = useState(null)
   const [showDetail, setShowDetail] = useState(false)
 
   useEffect(() => {
     listContacts({ category })
       .then(d => setContacts(d))
-      .catch(() => setContacts([]))
-      .finally(() => setLoading(false))
+      .catch(() => {})
   }, [category])
 
-  const showSkeleton = useDelayedLoading(loading)
-  if (showSkeleton) return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {[...Array(6)].map((_, i) => <ContactCardSkeleton key={i} />)}
-    </div>
-  )
   if (!contacts.length) return (
     <EmptyState icon={<User size={24} className="text-gray-400" />} title={`No ${category} contacts yet`}
       description={`Add contacts in the ${category} category to see them here.`} />
@@ -60,7 +50,6 @@ function CategoryContacts({ category }) {
 function ProfessionalNetwork() {
   const [contacts, setContacts]         = useState([])
   const [conferences, setConferences]   = useState([])
-  const [loading, setLoading]           = useState(true)
   const [selectedContact, setSelectedContact] = useState(null)
   const [showContactDetail, setShowContactDetail] = useState(false)
   const [selectedConf, setSelectedConf] = useState(null)
@@ -70,11 +59,9 @@ function ProfessionalNetwork() {
   const { addToast } = useUIStore()
 
   const load = () => {
-    setLoading(true)
     Promise.all([listContacts({ category: 'Professional' }), listConferences()])
       .then(([c, conf]) => { setContacts(c); setConferences(conf) })
-      .catch(() => { setContacts([]); setConferences([]) })
-      .finally(() => setLoading(false))
+      .catch(() => {})
   }
 
   useEffect(() => { load() }, [])
@@ -90,8 +77,6 @@ function ProfessionalNetwork() {
     finally { setAddLoading(false) }
   }
 
-  const showNetworkSkeleton = useDelayedLoading(loading)
-  if (showNetworkSkeleton) return <NetworkSkeleton />
 
   return (
     <div className="space-y-8 animate-fade-in">

@@ -1,9 +1,7 @@
 import { useEffect, useRef } from 'react'
-import { useDelayedLoading } from '../hooks/useDelayedLoading.js'
 import { Flame, Trophy, Target, Calendar, Dumbbell, Star, Gem, Zap, Award } from 'lucide-react'
 import WeeklyBar from '../components/streak/WeeklyBar.jsx'
 import { useStreakStore } from '../store/useStreakStore.js'
-import { StreakPageSkeleton } from '../components/ui/Spinner.jsx'
 
 const MILESTONES = [7, 14, 30, 60, 90, 180, 365]
 
@@ -24,7 +22,7 @@ async function fireConfetti() {
 }
 
 export default function StreakPage() {
-  const { streak, loading, fetchStreak } = useStreakStore()
+  const { streak, fetchStreak } = useStreakStore()
   const confettiFiredRef = useRef(false)
 
   useEffect(() => { fetchStreak() }, [])
@@ -36,9 +34,6 @@ export default function StreakPage() {
       fireConfetti()
     }
   }, [streak.currentStreak])
-
-  const showSkeleton = useDelayedLoading(loading)
-  if (showSkeleton) return <StreakPageSkeleton />
 
   const milestoneData = MILESTONE_DATA[streak.currentStreak]
   const MilestoneIcon = milestoneData?.icon

@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useDelayedLoading } from '../hooks/useDelayedLoading.js'
 import { Plus, Edit3, Trash2, Copy, MessageSquare } from 'lucide-react'
 import Modal from '../components/ui/Modal.jsx'
 import Button from '../components/ui/Button.jsx'
 import Input, { Select } from '../components/ui/Input.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
-import { TemplateCardSkeleton } from '../components/ui/Spinner.jsx'
 import { useConfirm } from '../hooks/useConfirm.jsx'
 import { listTemplates, createTemplate, updateTemplate, deleteTemplate } from '../api/templates.js'
 import { useUIStore } from '../store/useUIStore.js'
@@ -78,7 +76,6 @@ function TemplateEditor({ initial = {}, onSave, onCancel, loading }) {
 
 export default function Templates() {
   const [templates, setTemplates] = useState([])
-  const [loading, setLoading]     = useState(true)
   const [showAdd, setShowAdd]     = useState(false)
   const [editTarget, setEditTarget] = useState(null)
   const [saveLoading, setSaveLoading] = useState(false)
@@ -87,8 +84,7 @@ export default function Templates() {
 
   const load = () => listTemplates()
     .then(d => setTemplates(d))
-    .catch(() => setTemplates([]))
-    .finally(() => setLoading(false))
+    .catch(() => {})
   useEffect(() => { load() }, [])
 
   const handleCreate = async (data) => {
@@ -125,21 +121,6 @@ export default function Templates() {
     navigator.clipboard.writeText(body)
     addToast('Template body copied')
   }
-
-  const showSkeleton = useDelayedLoading(loading)
-  if (showSkeleton) return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Templates</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Saved message templates for quick outreach</p>
-        </div>
-      </div>
-      <div className="grid sm:grid-cols-2 gap-4">
-        {[...Array(4)].map((_, i) => <TemplateCardSkeleton key={i} />)}
-      </div>
-    </div>
-  )
 
   return (
     <div className="space-y-6 animate-fade-in">

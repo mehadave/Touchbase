@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useDelayedLoading } from '../hooks/useDelayedLoading.js'
 import { ChevronLeft, ChevronRight, CheckCircle, User, X } from 'lucide-react'
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek,
@@ -7,7 +6,6 @@ import {
   addMonths, subMonths, isToday,
 } from 'date-fns'
 import { listContacts } from '../api/contacts.js'
-import { CalendarSkeleton } from '../components/ui/Spinner.jsx'
 import Avatar from '../components/ui/Avatar.jsx'
 import ContactDetail from '../components/contacts/ContactDetail.jsx'
 import { useUIStore } from '../store/useUIStore.js'
@@ -23,7 +21,6 @@ const CATEGORY_COLOR = {
 export default function Calendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [contacts, setContacts]         = useState([])
-  const [loading, setLoading]           = useState(true)
   const [selectedDay, setSelectedDay]   = useState(null)
   const [selectedContact, setSelectedContact] = useState(null)
   const [showDetail, setShowDetail]     = useState(false)
@@ -32,8 +29,7 @@ export default function Calendar() {
   useEffect(() => {
     listContacts({ limit: 500 })
       .then(d => setContacts(d))
-      .catch(() => setContacts([]))
-      .finally(() => setLoading(false))
+      .catch(() => {})
   }, [])
 
   const days = useMemo(() => {
@@ -74,9 +70,6 @@ export default function Calendar() {
   const prevMonth = () => { setCurrentMonth(m => subMonths(m, 1)); setSelectedDay(null) }
   const nextMonth = () => { setCurrentMonth(m => addMonths(m, 1)); setSelectedDay(null) }
   const goToToday = () => { setCurrentMonth(new Date()); setSelectedDay(new Date()) }
-
-  const showSkeleton = useDelayedLoading(loading)
-  if (showSkeleton) return <CalendarSkeleton />
 
   return (
     <div className="space-y-6 pb-8 animate-fade-in">

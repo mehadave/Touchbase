@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useDelayedLoading } from '../hooks/useDelayedLoading.js'
 import { Link } from 'react-router-dom'
 import {
   AlertCircle, CalendarClock, ArrowRight, UserPlus,
@@ -8,7 +7,6 @@ import {
 import TodayTouchbase from '../components/TodayTouchbase.jsx'
 import StreakBar from '../components/streak/StreakBar.jsx'
 import Avatar from '../components/ui/Avatar.jsx'
-import { DashboardSkeleton } from '../components/ui/Spinner.jsx'
 import { getTodayTouchbase } from '../api/touchbase.js'
 import { listContacts } from '../api/contacts.js'
 import { stalenessInfo } from '../utils/contact.js'
@@ -21,7 +19,6 @@ export default function Dashboard() {
   const [touchbaseData, setTouchbaseData] = useState(null)
   const [overdue, setOverdue]             = useState([])
   const [upcoming, setUpcoming]           = useState([])
-  const [loading, setLoading]             = useState(true)
 
   const load = async () => {
     try {
@@ -40,15 +37,10 @@ export default function Dashboard() {
       ).slice(0, 5))
     } catch (err) {
       console.error(err)
-    } finally {
-      setLoading(false)
     }
   }
 
   useEffect(() => { load() }, [])
-
-  const showSkeleton = useDelayedLoading(loading)
-  if (showSkeleton) return <DashboardSkeleton />
 
   const greetingKey = overdue.length > 2 ? 'overdueMany' : 'allGood'
   const greetingCopy = c(`greeting.${greetingKey}`, tone)
