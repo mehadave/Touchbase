@@ -6,15 +6,18 @@ import StarRating from './ui/StarRating.jsx'
 import { CategoryBadge } from './ui/Badge.jsx'
 import { useUIStore } from '../store/useUIStore.js'
 import { useStreakStore } from '../store/useStreakStore.js'
+import { useSettingsStore } from '../store/useSettingsStore.js'
 import { markDone, skipTouchbase } from '../api/touchbase.js'
 import { fillTemplate } from '../utils/contact.js'
 import EmptyState from './ui/EmptyState.jsx'
 import { Flame, PartyPopper } from 'lucide-react'
+import { c } from '../utils/useCopy.js'
 
 export default function TodayTouchbase({ data, onRefresh }) {
   const { contact, template, queueId, allTemplates = [], message: serverMsg } = data || {}
   const { addToast } = useUIStore()
   const setStreak = useStreakStore(s => s.setStreak)
+  const tone      = useSettingsStore(s => s.settings?.app_tone || 'millennial')
 
   const [loading, setLoading] = useState(false)
   const [templateIdx, setTemplateIdx] = useState(0)
@@ -68,22 +71,26 @@ export default function TodayTouchbase({ data, onRefresh }) {
     setCurrentTemplate(allTemplates[next])
   }
 
+  const allGoodCopy = c('greeting.allGood', tone)
+
   if (serverMsg === 'all_done' || !contact) {
     return (
       <EmptyState
         icon={<PartyPopper size={24} className="text-amber-500" />}
-        title="You're all caught up!"
-        description="No contacts due for follow-up today. Check back tomorrow."
+        title={allGoodCopy.main}
+        description={allGoodCopy.sub}
       />
     )
   }
+
+  const doneCopy = c('logConfirm.checkedIn', tone)
 
   if (done) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-3 animate-fade-in">
         <div className="text-5xl">🔥</div>
         <h3 className="text-xl font-bold text-gray-900 dark:text-white">Touchbase logged!</h3>
-        <p className="text-gray-500">Great job staying connected with {contact.fullName}.</p>
+        <p className="text-gray-500">{doneCopy}</p>
       </div>
     )
   }

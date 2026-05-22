@@ -30,6 +30,15 @@ export function lastContactedLabel(contact) {
   return `${Math.floor(days / 365)} years ago`
 }
 
+export function orbitStateKey(contact) {
+  if (!contact.lastContacted) return 'lostInSpace'
+  const days = differenceInDays(new Date(), new Date(contact.lastContacted))
+  if (days < 14)  return 'inOrbit'
+  if (days < 30)  return 'drifting'
+  if (days < 60)  return 'darkSide'
+  return 'lostInSpace'
+}
+
 export function fillTemplate(body, contact) {
   const firstName = contact.fullName?.split(' ')[0] || ''
   return body

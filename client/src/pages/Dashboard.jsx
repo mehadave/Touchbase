@@ -12,8 +12,11 @@ import { getTodayTouchbase } from '../api/touchbase.js'
 import { listContacts } from '../api/contacts.js'
 import { stalenessInfo } from '../utils/contact.js'
 import { format, addDays } from 'date-fns'
+import { c } from '../utils/useCopy.js'
+import { useSettingsStore } from '../store/useSettingsStore.js'
 
 export default function Dashboard() {
+  const tone                              = useSettingsStore(s => s.settings?.app_tone || 'millennial')
   const [touchbaseData, setTouchbaseData] = useState(null)
   const [overdue, setOverdue]             = useState([])
   const [upcoming, setUpcoming]           = useState([])
@@ -45,6 +48,9 @@ export default function Dashboard() {
 
   if (loading) return <DashboardSkeleton />
 
+  const greetingKey = overdue.length > 2 ? 'overdueMany' : 'allGood'
+  const greetingCopy = c(`greeting.${greetingKey}`, tone)
+
   return (
     <div className="pb-8 animate-fade-in">
 
@@ -59,10 +65,10 @@ export default function Dashboard() {
               {format(new Date(), 'EEEE, MMMM d')}
             </p>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">
-              Good {getGreeting()}
+              {greetingCopy.main}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Stay close to the people who matter.
+              {greetingCopy.sub}
             </p>
           </div>
           <Link
@@ -225,10 +231,3 @@ function BentoEmpty({ icon, title, body }) {
   )
 }
 
-/* ── Helpers ──────────────────────────────────────────────────────── */
-function getGreeting() {
-  const h = new Date().getHours()
-  if (h < 12) return 'morning'
-  if (h < 17) return 'afternoon'
-  return 'evening'
-}

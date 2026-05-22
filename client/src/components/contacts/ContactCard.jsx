@@ -2,7 +2,9 @@ import { MapPin } from 'lucide-react'
 import Avatar from '../ui/Avatar.jsx'
 import StarRating from '../ui/StarRating.jsx'
 import { CategoryBadge, TagBadge } from '../ui/Badge.jsx'
-import { stalenessInfo, lastContactedLabel } from '../../utils/contact.js'
+import { stalenessInfo, lastContactedLabel, orbitStateKey } from '../../utils/contact.js'
+import { c } from '../../utils/useCopy.js'
+import { useSettingsStore } from '../../store/useSettingsStore.js'
 
 const stalenessStyle = {
   overdue: 'text-red-500 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
@@ -19,7 +21,10 @@ const dotColor = {
 }
 
 export default function ContactCard({ contact, onClick }) {
+  const tone      = useSettingsStore(s => s.settings?.app_tone || 'millennial')
   const info      = stalenessInfo(contact)
+  const orbitKey  = orbitStateKey(contact)
+  const orbitCopy = c(`orbitState.${orbitKey}`, tone)
   const MAX_TAGS  = 3
   const visibleTags   = contact.tags?.slice(0, MAX_TAGS) || []
   const extraTagCount = (contact.tags?.length || 0) - MAX_TAGS
@@ -78,7 +83,7 @@ export default function ContactCard({ contact, onClick }) {
           <span className={`w-1.5 h-1.5 rounded-full ${dotColor[info.status]}`} />
           {lastContactedLabel(contact)}
         </div>
-        <span>{info.label}</span>
+        <span>{orbitCopy.label || info.label}</span>
       </div>
     </div>
   )

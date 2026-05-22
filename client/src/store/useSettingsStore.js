@@ -6,6 +6,7 @@ export const useSettingsStore = create((set, get) => ({
     notification_time: '09:00',
     streak_reminder_enabled: true,
     default_follow_up_frequency: 30,
+    app_tone: 'millennial',
   },
   loading: false,
 

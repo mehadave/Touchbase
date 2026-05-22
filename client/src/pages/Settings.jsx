@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User, Bell, BellOff, Shield, LogOut } from 'lucide-react'
+import { User, Bell, BellOff, Shield, LogOut, Smile } from 'lucide-react'
 import { supabase } from '../lib/supabase.js'
 import { useSettingsStore } from '../store/useSettingsStore.js'
 import { useUIStore } from '../store/useUIStore.js'
@@ -216,6 +216,46 @@ export default function Settings() {
                 )}
               </div>
             )}
+          </div>
+        </div>
+      </section>
+
+      {/* Tone */}
+      <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+          <Smile size={16} className="text-amber-500" />
+          <div>
+            <h2 className="font-semibold text-gray-900 dark:text-white">App tone</h2>
+          </div>
+        </div>
+        <div className="p-5">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            How Touchbase talks to you — across greetings, nudges, and confirmations.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { value: 'genz',       label: 'Gen Z',       desc: 'lowkey, no-cap energy' },
+              { value: 'millennial', label: 'Millennial',  desc: 'warm and just a little earnest' },
+              { value: 'genx',       label: 'Gen X',       desc: 'direct, no fluff' },
+              { value: 'boomer',     label: 'Boomer',      desc: 'professional and warm' },
+            ].map(t => (
+              <button
+                key={t.value}
+                onClick={() => updateSettings({ app_tone: t.value })}
+                className={`text-left rounded-xl px-4 py-3 border transition-all ${
+                  (settings?.app_tone || 'millennial') === t.value
+                    ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-amber-200 dark:hover:border-amber-800'
+                }`}
+              >
+                <p className={`text-sm font-semibold ${
+                  (settings?.app_tone || 'millennial') === t.value
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : 'text-gray-700 dark:text-gray-300'
+                }`}>{t.label}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{t.desc}</p>
+              </button>
+            ))}
           </div>
         </div>
       </section>
