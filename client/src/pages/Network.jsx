@@ -8,7 +8,7 @@ import ConferenceForm from '../components/conferences/ConferenceForm.jsx'
 import Button from '../components/ui/Button.jsx'
 import Modal from '../components/ui/Modal.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
-import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { NetworkSkeleton, ContactCardSkeleton } from '../components/ui/Spinner.jsx'
 import { listContacts } from '../api/contacts.js'
 import { listConferences, createConference } from '../api/conferences.js'
 import { useUIStore } from '../store/useUIStore.js'
@@ -34,14 +34,18 @@ function CategoryContacts({ category }) {
       .finally(() => setLoading(false))
   }, [category])
 
-  if (loading) return <PageSpinner />
+  if (loading) return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {[...Array(6)].map((_, i) => <ContactCardSkeleton key={i} />)}
+    </div>
+  )
   if (!contacts.length) return (
     <EmptyState icon="👤" title={`No ${category} contacts yet`}
       description={`Add contacts in the ${category} category to see them here.`} />
   )
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
         {contacts.map(c => (
           <ContactCard key={c.id} contact={c} onClick={() => { setSelected(c); setShowDetail(true) }} />
         ))}
@@ -84,10 +88,10 @@ function ProfessionalNetwork() {
     finally { setAddLoading(false) }
   }
 
-  if (loading) return <PageSpinner />
+  if (loading) return <NetworkSkeleton />
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       {/* Conferences section */}
       <section>
         <div className="flex items-center justify-between mb-4">

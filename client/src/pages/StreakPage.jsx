@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Flame, Trophy, Target, Calendar } from 'lucide-react'
 import WeeklyBar from '../components/streak/WeeklyBar.jsx'
 import { useStreakStore } from '../store/useStreakStore.js'
-import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { StreakPageSkeleton } from '../components/ui/Spinner.jsx'
 
 const MILESTONES = [7, 14, 30, 60, 90, 180, 365]
 
@@ -38,10 +38,10 @@ export default function StreakPage() {
 
   const milestoneInfo = MILESTONE_MESSAGES[streak.currentStreak]
 
-  if (loading) return <PageSpinner />
+  if (loading) return <StreakPageSkeleton />
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Streak</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Your networking consistency over time</p>

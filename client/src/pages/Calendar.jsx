@@ -6,7 +6,7 @@ import {
   addMonths, subMonths, isToday, parseISO,
 } from 'date-fns'
 import { listContacts } from '../api/contacts.js'
-import { PageSpinner } from '../components/ui/Spinner.jsx'
+import { CalendarSkeleton } from '../components/ui/Spinner.jsx'
 import Avatar from '../components/ui/Avatar.jsx'
 import ContactDetail from '../components/contacts/ContactDetail.jsx'
 import Button from '../components/ui/Button.jsx'
@@ -84,10 +84,10 @@ export default function Calendar() {
     } catch { addToast('Failed', 'error') }
   }
 
-  if (loading) return <PageSpinner />
+  if (loading) return <CalendarSkeleton />
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Calendar</h1>

@@ -84,6 +84,75 @@ export function TemplateCardSkeleton() {
   )
 }
 
+// ── Streak page skeleton ──────────────────────────────────────────────────────
+export function StreakPageSkeleton() {
+  return (
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <Pulse className="h-7 w-20" />
+        <Pulse className="h-4 w-56" />
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => <Pulse key={i} className="h-28 w-full rounded-2xl" />)}
+      </div>
+      <Pulse className="h-36 w-full rounded-2xl" />
+      <Pulse className="h-64 w-full rounded-2xl" />
+    </div>
+  )
+}
+
+// ── Calendar skeleton ─────────────────────────────────────────────────────────
+export function CalendarSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <Pulse className="h-7 w-24" />
+          <Pulse className="h-4 w-40" />
+        </div>
+        <div className="flex gap-2">
+          <Pulse className="h-8 w-8 rounded-lg" />
+          <Pulse className="h-8 w-24 rounded-lg" />
+          <Pulse className="h-8 w-8 rounded-lg" />
+        </div>
+      </div>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {[...Array(7)].map((_, i) => <Pulse key={i} className="h-6 rounded" />)}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {[...Array(35)].map((_, i) => <Pulse key={i} className="h-14 rounded-xl" />)}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Network skeleton ──────────────────────────────────────────────────────────
+export function NetworkSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex gap-2">
+        {[...Array(3)].map((_, i) => <Pulse key={i} className="h-9 w-28 rounded-lg" />)}
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 flex flex-col gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-full animate-pulse bg-gray-200 dark:bg-gray-800 flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Pulse className="h-4 w-3/4" />
+                <Pulse className="h-3 w-1/2" />
+              </div>
+            </div>
+            <Pulse className="h-8 w-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Dashboard skeleton ────────────────────────────────────────────────────────
 export function DashboardSkeleton() {
   return (
