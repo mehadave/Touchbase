@@ -25,15 +25,31 @@ import { supabase } from './lib/supabase.js'
 function SplashScreen({ fading }) {
   return (
     <div
-      className={`fixed inset-0 z-[999] flex flex-col items-center justify-center bg-amber-500 ${fading ? 'animate-splash-fade' : 'animate-fade-in'}`}
+      className={`fixed inset-0 z-[999] flex flex-col items-center justify-center bg-amber-500 transition-all duration-500 ease-in-out ${fading ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}
     >
       <div className="flex flex-col items-center gap-5">
-        {/* Logo mark */}
+        {/* Logo mark — matches Logo.jsx exactly */}
         <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-2xl">
-          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="15" cy="22" r="11" fill="#F59E0B" opacity="0.9" />
-            <circle cx="29" cy="22" r="11" fill="#EF4444" opacity="0.8" />
-            <path d="M22 14 Q26 22 22 30 Q18 22 22 14Z" fill="white" opacity="0.9" />
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="splashGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#F59E0B" />
+                <stop offset="100%" stopColor="#EF4444" />
+              </linearGradient>
+              <linearGradient id="splashGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FBBF24" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#F97316" stopOpacity="0.9" />
+              </linearGradient>
+            </defs>
+            <circle cx="18" cy="24" r="14" fill="url(#splashGrad1)" />
+            <circle cx="30" cy="24" r="14" fill="url(#splashGrad2)" />
+            <path
+              d="M 18 24 Q 20 18 24 24 Q 28 30 30 24"
+              stroke="white" strokeWidth="2.5" fill="none"
+              strokeLinecap="round" strokeLinejoin="round"
+            />
+            <circle cx="18" cy="24" r="2" fill="white" opacity="0.9" />
+            <circle cx="30" cy="24" r="2" fill="white" opacity="0.9" />
           </svg>
         </div>
         {/* Wordmark */}
@@ -41,12 +57,12 @@ function SplashScreen({ fading }) {
           <p className="text-2xl font-bold text-white tracking-tight">Touchbase</p>
           <p className="text-amber-200 text-sm mt-1">relationships that last</p>
         </div>
-        {/* Pulse loader */}
+        {/* Staggered pulse dots */}
         <div className="flex gap-1.5 mt-2">
-          {[0,1,2].map(i => (
+          {[0, 1, 2].map(i => (
             <div
               key={i}
-              className="w-1.5 h-1.5 rounded-full bg-amber-200"
+              className="w-1.5 h-1.5 rounded-full bg-white/60"
               style={{ animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite` }}
             />
           ))}
