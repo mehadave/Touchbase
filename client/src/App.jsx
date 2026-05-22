@@ -68,12 +68,9 @@ export default function App() {
   useEffect(() => {
     initDarkMode()
 
-    // Load initial session — always resolve so isLoading never stays stuck
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => setSession(session))
-      .catch(() => setSession(null))
-
-    // Keep auth state in sync
+    // onAuthStateChange fires INITIAL_SESSION immediately with the current
+    // session — no need for a separate getSession() call, which would double-
+    // invoke setSession and render the loading screen twice.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
     })
