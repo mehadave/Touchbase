@@ -46,7 +46,7 @@ export default function Dashboard() {
   const greetingCopy = c(`greeting.${greetingKey}`, tone)
 
   return (
-    <div className="pb-8 animate-fade-in">
+    <div className="pb-8 ">
 
       {/* ── Bento grid ───────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-auto">

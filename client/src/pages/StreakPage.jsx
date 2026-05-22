@@ -39,7 +39,7 @@ export default function StreakPage() {
   const MilestoneIcon = milestoneData?.icon
 
   return (
-    <div className="space-y-6 pb-8 animate-fade-in">
+    <div className="space-y-6 pb-8 ">
 
       {/* ── Header ───────────────────────────────── */}
       <div>

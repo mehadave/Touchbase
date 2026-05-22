@@ -7,14 +7,13 @@ import CSVImportModal from '../components/contacts/CSVImportModal.jsx'
 import Button from '../components/ui/Button.jsx'
 import Input, { Select } from '../components/ui/Input.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
-import { ContactCardSkeleton } from '../components/ui/Spinner.jsx'
 import { useContactsStore } from '../store/useContactsStore.js'
 import { useUIStore } from '../store/useUIStore.js'
 import { useDebounce } from '../hooks/useDebounce.js'
 import Modal from '../components/ui/Modal.jsx'
 
 export default function Contacts() {
-  const { contacts, loading, filters, sortBy, setFilter, setSortBy, fetchContacts, createContact } = useContactsStore()
+  const { contacts, filters, sortBy, setFilter, setSortBy, fetchContacts, createContact } = useContactsStore()
   const { addToast } = useUIStore()
   const [selectedContact, setSelectedContact] = useState(null)
   const [showDetail, setShowDetail]           = useState(false)
@@ -49,7 +48,7 @@ export default function Contacts() {
     .filter(Boolean).length
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -104,7 +103,7 @@ export default function Contacts() {
 
       {/* Filter panel */}
       {showFilters && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
           <Select label="Category" value={filters.category} onChange={e => setFilter('category', e.target.value)}>
             <option value="">All categories</option>
             <option>Personal</option>
@@ -130,11 +129,7 @@ export default function Contacts() {
       )}
 
       {/* Contact grid */}
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => <ContactCardSkeleton key={i} />)}
-        </div>
-      ) : contacts.length === 0 ? (
+      {contacts.length === 0 ? (
         <EmptyState
           icon={<Users size={24} className="text-gray-400" />}
           title="No contacts yet"
