@@ -33,7 +33,11 @@ export default function Sidebar() {
       {/* Search */}
       <button
         onClick={() => setSearchOpen(true)}
-        className="mx-3 mt-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm"
+        aria-label="Open search"
+        className="mx-3 mt-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800
+                   text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700
+                   transition-colors duration-150 text-sm cursor-pointer
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1"
       >
         <Search size={14} />
         <span className="flex-1 text-left">Search…</span>
@@ -48,23 +52,24 @@ export default function Sidebar() {
             to={to}
             end={to === '/'}
             className={({ isActive }) =>
-              `relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                isActive
-                  ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
-              }`
+              `relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+               transition-all duration-150 cursor-pointer
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1
+               ${isActive
+                 ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400'
+                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
+               }`
             }
           >
             {({ isActive }) => (
               <>
-                {/* Active left-edge indicator */}
                 {isActive && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-amber-500 rounded-r-full" />
                 )}
                 <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                 <span>{label}</span>
                 {label === 'Streak' && streak.currentStreak > 0 && (
-                  <span className="ml-auto text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-semibold">
+                  <span className="ml-auto text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-semibold">
                     {streak.currentStreak}
                   </span>
                 )}
@@ -77,19 +82,20 @@ export default function Sidebar() {
       {/* Bottom controls */}
       <div className="px-4 py-4 border-t border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
             {darkMode ? <Moon size={15} /> : <Sun size={15} />}
             <span>{darkMode ? 'Dark mode' : 'Light mode'}</span>
           </div>
           <button
             onClick={toggleDarkMode}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
-              darkMode ? 'bg-amber-500' : 'bg-gray-200 dark:bg-gray-700'
-            }`}
             role="switch"
             aria-checked={darkMode}
+            aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 cursor-pointer
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2
+              ${darkMode ? 'bg-amber-500' : 'bg-gray-200 dark:bg-gray-700'}`}
           >
-            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform ${
+            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
               darkMode ? 'translate-x-[18px]' : 'translate-x-[3px]'
             }`} />
           </button>

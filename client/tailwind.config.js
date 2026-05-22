@@ -3,6 +3,14 @@ export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   darkMode: 'class',
   theme: {
+    screens: {
+      xs:  '375px',
+      sm:  '640px',
+      md:  '768px',
+      lg:  '1024px',
+      xl:  '1280px',
+      '2xl': '1440px',
+    },
     extend: {
       colors: {
         brand: {
@@ -19,7 +27,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans:    ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
       },
       animation: {
         'slide-in-right': 'slideInRight 0.3s ease-out',
@@ -27,7 +36,7 @@ export default {
         'fade-in':        'fadeIn 0.2s ease-out',
         'toast-in':       'toastIn 0.3s ease-out',
         'toast-out':      'toastOut 0.25s ease-in forwards',
-        'splash-fade':    'splashFade 0.4s ease-in forwards',
+        'splash-fade':    'splashFade 0.55s ease-out forwards',
       },
       keyframes: {
         slideInRight: {
@@ -51,8 +60,9 @@ export default {
           to:   { transform: 'translateY(100%) scale(0.9)', opacity: 0 },
         },
         splashFade: {
-          from: { opacity: 1, transform: 'scale(1)' },
-          to:   { opacity: 0, transform: 'scale(0.95)' },
+          '0%':   { opacity: 1 },
+          '40%':  { opacity: 1 },
+          '100%': { opacity: 0 },
         },
       },
     },

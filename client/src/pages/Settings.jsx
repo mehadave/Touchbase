@@ -106,7 +106,7 @@ export default function Settings() {
       </div>
 
       {/* Profile */}
-      <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <User size={16} className="text-amber-500" />
           <h2 className="font-semibold text-gray-900 dark:text-white">Profile</h2>
@@ -134,7 +134,7 @@ export default function Settings() {
       </section>
 
       {/* Preferences */}
-      <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <Bell size={16} className="text-amber-500" />
           <h2 className="font-semibold text-gray-900 dark:text-white">Preferences</h2>
@@ -221,7 +221,7 @@ export default function Settings() {
       </section>
 
       {/* Account */}
-      <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <Shield size={16} className="text-amber-500" />
           <h2 className="font-semibold text-gray-900 dark:text-white">Account</h2>

@@ -9,7 +9,7 @@ import { useStreakStore } from '../store/useStreakStore.js'
 import { markDone, skipTouchbase } from '../api/touchbase.js'
 import { fillTemplate } from '../utils/contact.js'
 import EmptyState from './ui/EmptyState.jsx'
-import { Flame } from 'lucide-react'
+import { Flame, PartyPopper } from 'lucide-react'
 
 export default function TodayTouchbase({ data, onRefresh }) {
   const { contact, template, queueId, allTemplates = [], message: serverMsg } = data || {}
@@ -71,7 +71,7 @@ export default function TodayTouchbase({ data, onRefresh }) {
   if (serverMsg === 'all_done' || !contact) {
     return (
       <EmptyState
-        icon="🎉"
+        icon={<PartyPopper size={24} className="text-amber-500" />}
         title="You're all caught up!"
         description="No contacts due for follow-up today. Check back tomorrow."
       />

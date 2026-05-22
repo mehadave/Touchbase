@@ -1,4 +1,4 @@
-import { Search, Sun, Moon, Menu } from 'lucide-react'
+import { Search, Sun, Moon } from 'lucide-react'
 import { useUIStore } from '../../store/useUIStore.js'
 import Logo from './Logo.jsx'
 
@@ -11,15 +11,19 @@ export default function TopBar() {
       <div className="flex-1" />
       <button
         onClick={() => setSearchOpen(true)}
-        className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         aria-label="Search"
+        className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800
+                   transition-colors duration-150 cursor-pointer
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1"
       >
         <Search size={20} />
       </button>
       <button
         onClick={toggleDarkMode}
-        className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-        aria-label="Toggle dark mode"
+        aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+        className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800
+                   transition-colors duration-150 cursor-pointer
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1"
       >
         {darkMode ? <Sun size={20} /> : <Moon size={20} />}
       </button>

@@ -11,6 +11,7 @@ import Settings from './pages/Settings.jsx'
 import Notes from './pages/Notes.jsx'
 import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
+import Landing from './pages/Landing.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { ToastContainer } from './components/ui/Toast.jsx'
 import SearchModal from './components/SearchModal.jsx'
@@ -60,7 +61,8 @@ export default function App() {
   const fetchSettings = useSettingsStore(s => s.fetchSettings)
   const fetchStreak   = useStreakStore(s => s.fetchStreak)
   const { setSession, session, isLoading } = useAuthStore()
-  const [splashVisible, setSplashVisible] = useState(true)
+  // Only show splash on mobile (< 768px); desktop gets no loading overlay
+  const [splashVisible, setSplashVisible] = useState(() => window.innerWidth < 768)
   const [splashFading, setSplashFading]   = useState(false)
 
   useEffect(() => {
@@ -83,7 +85,7 @@ export default function App() {
   useEffect(() => {
     if (!isLoading && splashVisible) {
       setSplashFading(true)
-      const t = setTimeout(() => setSplashVisible(false), 380)
+      const t = setTimeout(() => setSplashVisible(false), 560)
       return () => clearTimeout(t)
     }
   }, [isLoading])
@@ -99,9 +101,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public auth routes */}
-        <Route path="/login"  element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        {/* Public routes */}
+        <Route path="/landing" element={<Landing />} />
+        <Route path="/login"   element={<Login />} />
+        <Route path="/signup"  element={<Signup />} />
 
         {/* All app routes are protected */}
         <Route path="/*" element={

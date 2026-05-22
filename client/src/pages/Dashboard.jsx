@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertCircle, CalendarClock, ArrowRight } from 'lucide-react'
+import {
+  AlertCircle, CalendarClock, ArrowRight, UserPlus,
+  TrendingUp, Clock, PartyPopper, Target,
+} from 'lucide-react'
 import TodayTouchbase from '../components/TodayTouchbase.jsx'
 import StreakBar from '../components/streak/StreakBar.jsx'
 import Avatar from '../components/ui/Avatar.jsx'
 import { DashboardSkeleton } from '../components/ui/Spinner.jsx'
 import { getTodayTouchbase } from '../api/touchbase.js'
 import { listContacts } from '../api/contacts.js'
-import { stalenessInfo, lastContactedLabel } from '../utils/contact.js'
+import { stalenessInfo } from '../utils/contact.js'
 import { format, addDays } from 'date-fns'
 
 export default function Dashboard() {
@@ -24,12 +27,9 @@ export default function Dashboard() {
         listContacts({ sort: 'next_follow_up', limit: 50 }),
       ])
       setTouchbaseData(tb)
-      setOverdue(overdueContacts.filter(c => {
-        const info = stalenessInfo(c)
-        return info.status === 'overdue'
-      }).slice(0, 5))
+      setOverdue(overdueContacts.filter(c => stalenessInfo(c).status === 'overdue').slice(0, 5))
 
-      const in7 = format(addDays(new Date(), 7), 'yyyy-MM-dd')
+      const in7      = format(addDays(new Date(), 7), 'yyyy-MM-dd')
       const todayStr = format(new Date(), 'yyyy-MM-dd')
       setUpcoming(allContacts.filter(c =>
         c.nextFollowUp && c.nextFollowUp > todayStr && c.nextFollowUp <= in7
@@ -46,109 +46,189 @@ export default function Dashboard() {
   if (loading) return <DashboardSkeleton />
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Page title */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-          {format(new Date(), 'EEEE, MMMM d')} · stay close to the people who matter
-        </p>
-      </div>
+    <div className="pb-8 animate-fade-in">
 
-      {/* Streak bar */}
-      <StreakBar />
+      {/* ── Bento grid ───────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-auto">
 
-      {/* Today's Touchbase */}
-      <section>
-        <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-          👋 Today's Touchbase
-        </h2>
-        <TodayTouchbase data={touchbaseData} onRefresh={load} />
-      </section>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Overdue connections */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <AlertCircle size={16} className="text-red-500" />
-              Overdue Connections
-            </h2>
-            <Link to="/contacts?overdue=true" className="text-xs text-amber-500 hover:text-amber-600 font-medium flex items-center gap-1">
-              View all <ArrowRight size={12} />
-            </Link>
+        {/* Cell: Greeting ─ 2 cols */}
+        <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100
+                        dark:border-gray-800 p-5 shadow-sm flex flex-col justify-between min-h-[110px]">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1">
+              {format(new Date(), 'EEEE, MMMM d')}
+            </p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">
+              Good {getGreeting()}
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Stay close to the people who matter.
+            </p>
           </div>
+          <Link
+            to="/contacts"
+            className="mt-4 self-start inline-flex items-center gap-1.5 text-xs font-semibold
+                       px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800
+                       text-gray-600 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/20
+                       hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-150 cursor-pointer"
+          >
+            <UserPlus size={13} /> Add contact
+          </Link>
+        </div>
 
-          {overdue.length === 0 ? (
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 p-6 text-center">
-              <p className="text-2xl mb-2">🎉</p>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">All caught up!</p>
-              <p className="text-xs text-gray-400 mt-0.5">No overdue contacts right now.</p>
+        {/* Cell: Streak ─ 2 cols */}
+        <div className="lg:col-span-2">
+          <StreakBar />
+        </div>
+
+        {/* Cell: Today's Touchbase ─ full width */}
+        <div className="col-span-full">
+          <BentoCard
+            icon={<Target size={15} className="text-amber-500" />}
+            title="Today's Touchbase"
+            className="p-0 overflow-hidden"
+          >
+            <div className="px-5 pb-5 pt-1">
+              <TodayTouchbase data={touchbaseData} onRefresh={load} />
             </div>
-          ) : (
-            <div className="space-y-2">
-              {overdue.map(contact => {
-                const info = stalenessInfo(contact)
-                return (
-                  <div key={contact.id} className="flex items-center gap-3 bg-white dark:bg-gray-900 rounded-xl border border-red-100 dark:border-red-900/30 p-3 hover:border-red-200 dark:hover:border-red-800 transition-colors">
-                    <Avatar name={contact.fullName} photoPath={contact.photoPath} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{contact.fullName}</p>
-                      <p className="text-xs text-gray-400 truncate">{contact.company || info.label}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="text-[10px] font-medium text-red-500 whitespace-nowrap">{info.label}</span>
-                      <Link
-                        to="/contacts"
-                        className="text-[10px] bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-md font-medium hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
-                      >
-                        Reach out →
+          </BentoCard>
+        </div>
+
+        {/* Cell: Overdue ─ 2 cols */}
+        <div className="md:col-span-1 lg:col-span-2">
+          <BentoCard
+            icon={<AlertCircle size={15} className="text-red-500" />}
+            title="Overdue"
+            action={
+              <Link to="/contacts?overdue=true"
+                className="text-xs text-amber-500 hover:text-amber-600 font-semibold
+                           flex items-center gap-0.5 transition-colors cursor-pointer">
+                View all <ArrowRight size={11} />
+              </Link>
+            }
+          >
+            {overdue.length === 0 ? (
+              <BentoEmpty icon={<PartyPopper size={22} className="text-green-500" />}
+                title="All caught up!" body="No overdue contacts right now." />
+            ) : (
+              <ul className="space-y-1.5">
+                {overdue.map(contact => {
+                  const info = stalenessInfo(contact)
+                  return (
+                    <li key={contact.id}>
+                      <Link to="/contacts"
+                        className="flex items-center gap-3 p-2.5 rounded-xl
+                                   hover:bg-red-50 dark:hover:bg-red-900/10
+                                   transition-colors duration-150 cursor-pointer group">
+                        <Avatar name={contact.fullName} photoPath={contact.photoPath} size="sm" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                            {contact.fullName}
+                          </p>
+                          <p className="text-xs text-gray-400 truncate">{contact.company || '—'}</p>
+                        </div>
+                        <span className="text-[10px] font-bold text-red-600 dark:text-red-400
+                                         bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded-lg
+                                         whitespace-nowrap shrink-0">
+                          {info.label}
+                        </span>
                       </Link>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </section>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </BentoCard>
+        </div>
 
-        {/* Upcoming this week */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <CalendarClock size={16} className="text-blue-500" />
-              Upcoming This Week
-            </h2>
-            <Link to="/calendar" className="text-xs text-amber-500 hover:text-amber-600 font-medium flex items-center gap-1">
-              Calendar <ArrowRight size={12} />
-            </Link>
-          </div>
+        {/* Cell: Upcoming ─ 2 cols */}
+        <div className="md:col-span-1 lg:col-span-2">
+          <BentoCard
+            icon={<CalendarClock size={15} className="text-blue-500" />}
+            title="This Week"
+            action={
+              <Link to="/calendar"
+                className="text-xs text-amber-500 hover:text-amber-600 font-semibold
+                           flex items-center gap-0.5 transition-colors cursor-pointer">
+                Calendar <ArrowRight size={11} />
+              </Link>
+            }
+          >
+            {upcoming.length === 0 ? (
+              <BentoEmpty icon={<Clock size={22} className="text-blue-400" />}
+                title="Clear week ahead" body="No follow-ups due in the next 7 days." />
+            ) : (
+              <ul className="space-y-1.5">
+                {upcoming.map(contact => {
+                  const info = stalenessInfo(contact)
+                  return (
+                    <li key={contact.id}>
+                      <Link to="/calendar"
+                        className="flex items-center gap-3 p-2.5 rounded-xl
+                                   hover:bg-blue-50 dark:hover:bg-blue-900/10
+                                   transition-colors duration-150 cursor-pointer group">
+                        <Avatar name={contact.fullName} photoPath={contact.photoPath} size="sm" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                            {contact.fullName}
+                          </p>
+                          <p className="text-xs text-gray-400 truncate">{contact.company || '—'}</p>
+                        </div>
+                        <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400
+                                         bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg
+                                         whitespace-nowrap shrink-0">
+                          {info.label}
+                        </span>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </BentoCard>
+        </div>
 
-          {upcoming.length === 0 ? (
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 p-6 text-center">
-              <p className="text-2xl mb-2">📅</p>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Clear week ahead</p>
-              <p className="text-xs text-gray-400 mt-0.5">No follow-ups due in the next 7 days.</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {upcoming.map(contact => {
-                const info = stalenessInfo(contact)
-                return (
-                  <div key={contact.id} className="flex items-center gap-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 hover:border-blue-200 dark:hover:border-blue-800/50 transition-colors">
-                    <Avatar name={contact.fullName} photoPath={contact.photoPath} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{contact.fullName}</p>
-                      <p className="text-xs text-gray-400 truncate">{contact.company || contact.jobTitle || '—'}</p>
-                    </div>
-                    <span className="text-[10px] font-semibold text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md whitespace-nowrap">{info.label}</span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </section>
       </div>
     </div>
   )
+}
+
+/* ── Bento card shell ─────────────────────────────────────────────── */
+function BentoCard({ icon, title, action, children, className = '' }) {
+  return (
+    <div className={`bg-white dark:bg-gray-900 rounded-2xl border border-gray-100
+                     dark:border-gray-800 shadow-sm h-full ${className}`}>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50 dark:border-gray-800/60">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
+          {icon}
+          {title}
+        </h2>
+        {action}
+      </div>
+      <div className="p-4">{children}</div>
+    </div>
+  )
+}
+
+/* ── Empty state inside a bento card ─────────────────────────────── */
+function BentoEmpty({ icon, title, body }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-6 text-center gap-2">
+      <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">{title}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{body}</p>
+      </div>
+    </div>
+  )
+}
+
+/* ── Helpers ──────────────────────────────────────────────────────── */
+function getGreeting() {
+  const h = new Date().getHours()
+  if (h < 12) return 'morning'
+  if (h < 17) return 'afternoon'
+  return 'evening'
 }

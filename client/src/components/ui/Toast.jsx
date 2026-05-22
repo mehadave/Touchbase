@@ -15,7 +15,13 @@ function Toast({ toast }) {
     <div className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 min-w-64 max-w-sm animate-toast-in">
       {icons[toast.type] || icons.info}
       <p className="flex-1 text-sm text-gray-800 dark:text-gray-200 font-medium">{toast.message}</p>
-      <button onClick={() => removeToast(toast.id)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 flex-shrink-0">
+      <button
+        onClick={() => removeToast(toast.id)}
+        aria-label="Dismiss notification"
+        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 flex-shrink-0
+                   transition-colors duration-150 cursor-pointer rounded
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+      >
         <X size={14} />
       </button>
     </div>

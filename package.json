@@ -13,6 +13,7 @@
     "db:studio": "cd server && npm run db:studio"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "sharp": "^0.34.5"
   }
 }
