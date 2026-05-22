@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useDelayedLoading } from '../hooks/useDelayedLoading.js'
 import { Link } from 'react-router-dom'
 import {
   AlertCircle, CalendarClock, ArrowRight, UserPlus,
@@ -46,7 +47,8 @@ export default function Dashboard() {
 
   useEffect(() => { load() }, [])
 
-  if (loading) return <DashboardSkeleton />
+  const showSkeleton = useDelayedLoading(loading)
+  if (showSkeleton) return <DashboardSkeleton />
 
   const greetingKey = overdue.length > 2 ? 'overdueMany' : 'allGood'
   const greetingCopy = c(`greeting.${greetingKey}`, tone)

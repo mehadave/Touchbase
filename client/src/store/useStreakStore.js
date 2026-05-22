@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { getStreak } from '../api/touchbase.js'
 
-export const useStreakStore = create((set) => ({
+export const useStreakStore = create((set, get) => ({
   streak: {
     currentStreak: 0,
     longestStreak: 0,
@@ -12,7 +12,9 @@ export const useStreakStore = create((set) => ({
   loading: false,
 
   fetchStreak: async () => {
-    set({ loading: true })
+    // Only block on first load; subsequent re-fetches update silently.
+    const hasData = get().streak.total > 0 || get().streak.currentStreak > 0
+    if (!hasData) set({ loading: true })
     try {
       const data = await getStreak()
       set({ streak: data, loading: false })

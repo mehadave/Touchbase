@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useDelayedLoading } from '../hooks/useDelayedLoading.js'
 import { ChevronLeft, ChevronRight, CheckCircle, User, X } from 'lucide-react'
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek,
@@ -74,7 +75,8 @@ export default function Calendar() {
   const nextMonth = () => { setCurrentMonth(m => addMonths(m, 1)); setSelectedDay(null) }
   const goToToday = () => { setCurrentMonth(new Date()); setSelectedDay(new Date()) }
 
-  if (loading) return <CalendarSkeleton />
+  const showSkeleton = useDelayedLoading(loading)
+  if (showSkeleton) return <CalendarSkeleton />
 
   return (
     <div className="space-y-6 pb-8 animate-fade-in">

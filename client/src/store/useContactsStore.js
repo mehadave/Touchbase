@@ -20,7 +20,10 @@ export const useContactsStore = create((set, get) => ({
   clearFilters: () => set({ filters: { search: '', category: '', tag: '', strength: '', overdue: false, conference_id: '' } }),
 
   fetchContacts: async (params = {}) => {
-    set({ loading: true })
+    // Only show loading spinner on first load — subsequent refreshes update
+    // silently so the user sees stale data rather than a blank skeleton.
+    const hasData = get().contacts.length > 0
+    if (!hasData) set({ loading: true })
     try {
       const { filters, sortBy } = get()
       const query = { ...filters, sort: sortBy, ...params }

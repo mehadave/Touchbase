@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useDelayedLoading } from '../hooks/useDelayedLoading.js'
 import { Plus, Edit3, Trash2, Copy, MessageSquare } from 'lucide-react'
 import Modal from '../components/ui/Modal.jsx'
 import Button from '../components/ui/Button.jsx'
@@ -125,7 +126,8 @@ export default function Templates() {
     addToast('Template body copied')
   }
 
-  if (loading) return (
+  const showSkeleton = useDelayedLoading(loading)
+  if (showSkeleton) return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useDelayedLoading } from '../hooks/useDelayedLoading.js'
 import { Flame, Trophy, Target, Calendar, Dumbbell, Star, Gem, Zap, Award } from 'lucide-react'
 import WeeklyBar from '../components/streak/WeeklyBar.jsx'
 import { useStreakStore } from '../store/useStreakStore.js'
@@ -36,7 +37,8 @@ export default function StreakPage() {
     }
   }, [streak.currentStreak])
 
-  if (loading) return <StreakPageSkeleton />
+  const showSkeleton = useDelayedLoading(loading)
+  if (showSkeleton) return <StreakPageSkeleton />
 
   const milestoneData = MILESTONE_DATA[streak.currentStreak]
   const MilestoneIcon = milestoneData?.icon

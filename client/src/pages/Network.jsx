@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useDelayedLoading } from '../hooks/useDelayedLoading.js'
 import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom'
 import { Plus, MapPin, Calendar, Globe, Users, User, Presentation, Briefcase } from 'lucide-react'
 import ContactCard from '../components/contacts/ContactCard.jsx'
@@ -34,7 +35,8 @@ function CategoryContacts({ category }) {
       .finally(() => setLoading(false))
   }, [category])
 
-  if (loading) return (
+  const showSkeleton = useDelayedLoading(loading)
+  if (showSkeleton) return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {[...Array(6)].map((_, i) => <ContactCardSkeleton key={i} />)}
     </div>
@@ -88,7 +90,8 @@ function ProfessionalNetwork() {
     finally { setAddLoading(false) }
   }
 
-  if (loading) return <NetworkSkeleton />
+  const showNetworkSkeleton = useDelayedLoading(loading)
+  if (showNetworkSkeleton) return <NetworkSkeleton />
 
   return (
     <div className="space-y-8 animate-fade-in">
