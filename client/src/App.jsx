@@ -77,7 +77,7 @@ export default function App() {
   const fetchSettings = useSettingsStore(s => s.fetchSettings)
   const fetchStreak   = useStreakStore(s => s.fetchStreak)
   const { setSession, session, isLoading } = useAuthStore()
-  const [splashVisible, setSplashVisible] = useState(true)
+  const [splashVisible, setSplashVisible] = useState(() => window.innerWidth < 768)
   const [splashFading, setSplashFading]   = useState(false)
   const splashStart = useState(() => Date.now())[0]
 
