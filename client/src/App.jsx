@@ -77,9 +77,9 @@ export default function App() {
   const fetchSettings = useSettingsStore(s => s.fetchSettings)
   const fetchStreak   = useStreakStore(s => s.fetchStreak)
   const { setSession, session, isLoading } = useAuthStore()
-  // Only show splash on mobile (< 768px); desktop gets no loading overlay
-  const [splashVisible, setSplashVisible] = useState(() => window.innerWidth < 768)
+  const [splashVisible, setSplashVisible] = useState(true)
   const [splashFading, setSplashFading]   = useState(false)
+  const splashStart = useState(() => Date.now())[0]
 
   useEffect(() => {
     initDarkMode()
@@ -94,11 +94,15 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Fade out splash once auth resolves
+  // Fade out splash once auth resolves, but always show for at least 2.5s
   useEffect(() => {
     if (!isLoading && splashVisible) {
-      setSplashFading(true)
-      const t = setTimeout(() => setSplashVisible(false), 560)
+      const elapsed   = Date.now() - splashStart
+      const remaining = Math.max(0, 2500 - elapsed)
+      const t = setTimeout(() => {
+        setSplashFading(true)
+        setTimeout(() => setSplashVisible(false), 520)
+      }, remaining)
       return () => clearTimeout(t)
     }
   }, [isLoading])
