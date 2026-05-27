@@ -11,10 +11,9 @@ const tabs = [
   { to: '/settings', icon: Settings,        label: 'Settings' },
 ]
 
-// Soap-bubble iridescent border: dark fill + rainbow conic-gradient border
-const BUBBLE_BG =
-  'linear-gradient(rgba(15,15,20,0.72), rgba(15,15,20,0.72)) padding-box, ' +
-  'conic-gradient(from 0deg, #f472b6, #818cf8, #22d3ee, #34d399, #fbbf24, #fb923c, #f472b6) border-box'
+// Expanded bubble: dark translucent fill + subtle glass ring (no colour)
+const POP_BG     = 'rgba(18, 18, 22, 0.68)'
+const POP_BORDER = '1.5px solid rgba(255, 255, 255, 0.18)'
 
 export default function BottomTabBar() {
   const { pathname } = useLocation()
@@ -68,8 +67,8 @@ export default function BottomTabBar() {
   const h      = isPopped ? popH   : idleH
   const scale  = isPopped ? 1.14   : 1
   const radius = isPopped ? '50%'  : '18px'
-  const bg     = isPopped ? BUBBLE_BG : '#18181b'
-  const border = isPopped ? '2.5px solid transparent' : 'none'
+  const bg     = isPopped ? POP_BG   : '#18181b'
+  const border = isPopped ? POP_BORDER : 'none'
 
   const leftVal = `calc(${bubbleIdx} * 100% / ${n})`
   const widthVal = `calc(100% / ${n})`
@@ -124,15 +123,6 @@ export default function BottomTabBar() {
                 style={{ height: idleH }}
                 className="relative flex-1 flex flex-col items-center justify-center gap-[3px] focus:outline-none"
               >
-                {/* Inactive: subtle circular grey tint */}
-                {!isActive && (
-                  <div
-                    aria-hidden
-                    className="absolute rounded-full bg-white/[0.06]"
-                    style={{ inset: 5 }}
-                  />
-                )}
-
                 <Icon
                   size={isActive ? 21 : 19}
                   strokeWidth={isActive ? 2.5 : 2}
