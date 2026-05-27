@@ -73,6 +73,127 @@ function InlineSelect({ value, onChange, options, placeholder, icon: Icon }) {
   )
 }
 
+// Searchable contact picker — shows avatar initials + name, filters as you type
+function ContactPicker({ value, onChange, contacts }) {
+  const [open, setOpen]       = useState(false)
+  const [query, setQuery]     = useState('')
+  const ref                   = useRef(null)
+  const searchRef             = useRef(null)
+
+  const selected = contacts.find(c => c.id === value)
+  const filtered = query
+    ? contacts.filter(c => c.fullName.toLowerCase().includes(query.toLowerCase()))
+    : contacts
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) { setOpen(false); setQuery('') } }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const handleOpen = () => {
+    setOpen(o => !o)
+    setQuery('')
+    // Focus the search input after the dropdown renders
+    setTimeout(() => searchRef.current?.focus(), 50)
+  }
+
+  const handleSelect = (id) => {
+    onChange(id)
+    setOpen(false)
+    setQuery('')
+  }
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={handleOpen}
+        className={`flex items-center gap-1.5 text-xs font-medium pl-2.5 pr-2 py-1.5 rounded-full border transition-colors
+          ${selected
+            ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
+            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-amber-400'
+          }`}
+      >
+        <User size={11} className={selected ? 'text-amber-500' : 'text-gray-400'} />
+        <span className="max-w-[140px] truncate">{selected ? selected.fullName : 'No linked contact'}</span>
+        {selected
+          ? <X size={11} className="text-amber-400 hover:text-amber-600 ml-0.5" onClick={e => { e.stopPropagation(); handleSelect('') }} />
+          : <ChevronDown size={11} className={`text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+        }
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 mt-1 z-50 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden">
+          {/* Search input */}
+          <div className="p-2 border-b border-gray-100 dark:border-gray-700">
+            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-700">
+              <Search size={11} className="text-gray-400 shrink-0" />
+              <input
+                ref={searchRef}
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Search contacts…"
+                className="flex-1 text-xs bg-transparent outline-none text-gray-700 dark:text-gray-200 placeholder-gray-400"
+              />
+              {query && (
+                <button type="button" onClick={() => setQuery('')}>
+                  <X size={10} className="text-gray-400 hover:text-gray-600" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Options list */}
+          <div className="max-h-44 overflow-y-auto py-1">
+            {/* "No contact" option */}
+            <button
+              type="button"
+              onClick={() => handleSelect('')}
+              className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs transition-colors ${
+                !value
+                  ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20'
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
+            >
+              <span className="flex-1 italic">No linked contact</span>
+              {!value && <Check size={11} />}
+            </button>
+
+            {filtered.length === 0 ? (
+              <p className="px-3 py-3 text-xs text-gray-400 text-center">No contacts found</p>
+            ) : (
+              filtered.map(c => {
+                const isSelected = c.id === value
+                const initials = c.fullName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => handleSelect(c.id)}
+                    className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs transition-colors ${
+                      isSelected
+                        ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {/* Avatar circle */}
+                    <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 flex items-center justify-center text-[9px] font-semibold shrink-0">
+                      {initials}
+                    </span>
+                    <span className="flex-1 truncate">{c.fullName}</span>
+                    {isSelected && <Check size={11} />}
+                  </button>
+                )
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function NoteEditor({ initial = {}, contacts = [], onSave, onCancel, loading }) {
   const [form, setForm] = useState({
     title: initial.title || '',
@@ -86,10 +207,6 @@ function NoteEditor({ initial = {}, contacts = [], onSave, onCancel, loading }) 
   useEffect(() => { bodyRef.current?.focus() }, [])
 
   const categoryOptions = CATEGORIES.filter(c => c !== 'All')
-  const contactOptions = [
-    { value: '', label: 'No linked contact' },
-    ...contacts.map(c => ({ value: c.id, label: c.fullName })),
-  ]
 
   return (
     <form onSubmit={e => { e.preventDefault(); onSave(form) }} className="p-5 space-y-4">
@@ -109,12 +226,10 @@ function NoteEditor({ initial = {}, contacts = [], onSave, onCancel, loading }) 
           options={categoryOptions}
           placeholder="Category"
         />
-        <InlineSelect
+        <ContactPicker
           value={form.contact_id}
           onChange={v => set('contact_id', v)}
-          options={contactOptions}
-          placeholder="No linked contact"
-          icon={User}
+          contacts={contacts}
         />
       </div>
 
