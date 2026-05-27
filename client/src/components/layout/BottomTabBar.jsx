@@ -72,14 +72,19 @@ export default function BottomTabBar() {
   const n          = tabs.length
   const isPopped   = phase === 'pop' || phase === 'travel'
 
+  // Pill shell colours
+  const pillBg     = dark ? 'rgba(18, 18, 22, 0.88)'  : 'rgba(255, 255, 255, 0.75)'
+  const pillBorder = dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.06)'
+  const pillShadow = dark ? '0 8px 32px rgba(0,0,0,0.6)'      : '0 8px 24px rgba(0,0,0,0.10)'
+
   // Bubble geometry — colours adapt to light / dark mode
   const idleH    = 50
   const popH     = 68
   const h        = isPopped ? popH  : idleH
   const scale    = isPopped ? 1.14  : 1
   const radius   = isPopped ? '50%' : '18px'
-  const idleBg   = dark ? '#18181b' : 'rgba(0,0,0,0.08)'
-  const popBg    = dark ? 'rgba(18,18,22,0.68)' : 'rgba(255,255,255,0.55)'
+  const idleBg   = dark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.08)'
+  const popBg    = dark ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.55)'
   const bg       = isPopped ? popBg   : idleBg
   const border   = isPopped ? POP_BORDER : 'none'
 
@@ -102,10 +107,15 @@ export default function BottomTabBar() {
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="mx-4 mb-4">
-        {/* Outer dark pill */}
+        {/* Outer pill */}
         <div
-          className="relative flex bg-white/70 dark:bg-gray-900/88 backdrop-blur-2xl rounded-[28px] border border-black/[0.06] dark:border-white/[0.07] shadow-xl shadow-black/10 dark:shadow-black/60"
-          style={{ padding: 6 }}
+          className="relative flex backdrop-blur-2xl rounded-[28px]"
+          style={{
+            padding:    6,
+            background: pillBg,
+            border:     pillBorder,
+            boxShadow:  pillShadow,
+          }}
         >
           {/* ── Sliding bubble indicator ── */}
           <div
@@ -144,7 +154,7 @@ export default function BottomTabBar() {
                     position: 'relative', zIndex: 2, transition: 'color 200ms',
                     color: isActive
                       ? (dark ? 'white' : '#111827')
-                      : (dark ? '#6b7280' : '#9ca3af'),
+                      : (dark ? 'rgba(255,255,255,0.38)' : '#9ca3af'),
                   }}
                 />
 
@@ -158,7 +168,7 @@ export default function BottomTabBar() {
                     letterSpacing: '-0.01em',
                     color: isActive
                       ? (dark ? 'white'   : '#111827')
-                      : (dark ? '#6b7280' : '#9ca3af'),
+                      : (dark ? 'rgba(255,255,255,0.38)' : '#9ca3af'),
                   }}
                 >
                   {label}
