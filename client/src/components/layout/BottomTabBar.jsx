@@ -83,8 +83,9 @@ export default function BottomTabBar() {
   const bg       = isPopped ? popBg   : idleBg
   const border   = isPopped ? POP_BORDER : 'none'
 
-  const leftVal = `calc(${bubbleIdx} * 100% / ${n})`
-  const widthVal = `calc(100% / ${n})`
+  const padding = 6
+  const leftVal = `calc(${padding}px + ${bubbleIdx} * (100% - ${padding * 2}px) / ${n})`
+  const widthVal = `calc((100% - ${padding * 2}px) / ${n})`
 
   // Left only transitions during 'travel'; no transition on 'idle' (snap on external nav)
   const transition = [
