@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { LayoutDashboard, Users, Network, Calendar, Settings, StickyNote } from 'lucide-react'
 
 const tabs = [
@@ -11,37 +11,72 @@ const tabs = [
 ]
 
 export default function BottomTabBar() {
+  const { pathname } = useLocation()
+
+  const activeIndex = tabs.findIndex(({ to }) =>
+    to === '/' ? pathname === '/' : pathname.startsWith(to)
+  )
+
+  const pct = `${(activeIndex / tabs.length) * 100}%`
+  const w   = `${100 / tabs.length}%`
+
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-30 safe-area-inset-bottom"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-30"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="mx-3 mb-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-lg shadow-black/10 dark:shadow-black/30">
-        <div className="flex px-1 py-1">
-          {tabs.map(({ to, icon: Icon, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/'}
-              aria-label={label}
-              className={({ isActive }) =>
-                `flex-1 flex flex-col items-center justify-center min-h-[56px] gap-0.5 rounded-xl
-                 transition-all duration-150 active:scale-95 cursor-pointer
-                 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-inset
-                 ${isActive ? 'text-amber-500' : 'text-gray-400 dark:text-gray-500'}`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <div className={`w-5 h-0.5 rounded-full mb-0.5 transition-all duration-150 ${isActive ? 'bg-amber-500' : 'bg-transparent'}`} />
-                  <Icon size={22} strokeWidth={isActive ? 2.5 : 1.75} />
-                  <span className={`text-[11px] font-medium tracking-tight mt-0.5 ${isActive ? 'text-amber-500' : ''}`}>
-                    {label}
-                  </span>
-                </>
-              )}
-            </NavLink>
-          ))}
+      <div className="mx-4 mb-4">
+        {/* Outer pill */}
+        <div className="relative flex items-stretch bg-gray-900/88 dark:bg-gray-950/90 backdrop-blur-2xl rounded-[28px] border border-white/8 shadow-2xl shadow-black/50 p-1.5">
+
+          {/* Sliding white bubble */}
+          <div
+            className="absolute inset-y-1.5 pointer-events-none"
+            style={{
+              left:  pct,
+              width: w,
+              padding: '0 6px',
+              transition: 'left 320ms cubic-bezier(0.34, 1.4, 0.64, 1)',
+            }}
+          >
+            <div className="w-full h-full bg-white rounded-[20px] shadow-sm" />
+          </div>
+
+          {/* Tab items */}
+          {tabs.map(({ to, icon: Icon, label }, i) => {
+            const isActive = i === activeIndex
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                end={to === '/'}
+                aria-label={label}
+                className="relative z-10 flex-1 flex flex-col items-center justify-center py-2.5 gap-[3px] focus:outline-none"
+              >
+                <Icon
+                  size={isActive ? 21 : 20}
+                  strokeWidth={isActive ? 2.5 : 1.75}
+                  style={{ transition: 'color 200ms, transform 320ms cubic-bezier(0.34, 1.4, 0.64, 1)' }}
+                  className={isActive ? 'text-gray-900' : 'text-gray-500'}
+                />
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    letterSpacing: '-0.01em',
+                    lineHeight: 1,
+                    maxHeight: isActive ? 14 : 0,
+                    opacity: isActive ? 1 : 0,
+                    overflow: 'hidden',
+                    transition: 'max-height 250ms ease, opacity 200ms ease',
+                  }}
+                  className={isActive ? 'text-gray-900' : 'text-gray-500'}
+                >
+                  {label}
+                </span>
+              </NavLink>
+            )
+          })}
         </div>
       </div>
     </nav>

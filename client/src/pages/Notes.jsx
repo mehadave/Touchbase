@@ -4,7 +4,6 @@ import { listNotes, createNote, updateNote, deleteNote } from '../api/notes.js'
 import { listContacts } from '../api/contacts.js'
 import { useUIStore } from '../store/useUIStore.js'
 import { useConfirm } from '../hooks/useConfirm.jsx'
-import { NoteCardSkeleton } from '../components/ui/Spinner.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
 import Modal from '../components/ui/Modal.jsx'
 import Button from '../components/ui/Button.jsx'
@@ -207,7 +206,6 @@ function NoteCard({ note, onEdit, onDelete }) {
 export default function Notes() {
   const [notes, setNotes]       = useState([])
   const [contacts, setContacts] = useState([])
-  const [loading, setLoading]   = useState(true)
   const [activeCategory, setActiveCategory] = useState('All')
   const [search, setSearch]     = useState('')
   const [showEditor, setShowEditor] = useState(false)
@@ -222,8 +220,7 @@ export default function Notes() {
     if (q) params.q = q
     listNotes(params)
       .then(d => setNotes(d))
-      .catch(() => setNotes([]))
-      .finally(() => setLoading(false))
+      .catch(() => {})
   }
 
   useEffect(() => {
@@ -232,7 +229,6 @@ export default function Notes() {
   }, [])
 
   useEffect(() => {
-    setLoading(true)
     load(activeCategory, search)
   }, [activeCategory, search])
 
@@ -313,15 +309,7 @@ export default function Notes() {
       </div>
 
       {/* Notes grid */}
-      {loading ? (
-        <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-0">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="break-inside-avoid mb-4">
-              <NoteCardSkeleton />
-            </div>
-          ))}
-        </div>
-      ) : notes.length === 0 ? (
+      {notes.length === 0 ? (
         <EmptyState
           icon={<StickyNote size={24} className="text-gray-400" />}
           title={search ? 'No notes match your search' : 'No notes yet'}
