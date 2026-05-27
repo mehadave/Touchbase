@@ -2,6 +2,18 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Users, Network, Calendar, Settings, StickyNote } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
+function useDark() {
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
+  useEffect(() => {
+    const obs = new MutationObserver(() =>
+      setDark(document.documentElement.classList.contains('dark'))
+    )
+    obs.observe(document.documentElement, { attributeFilter: ['class'] })
+    return () => obs.disconnect()
+  }, [])
+  return dark
+}
+
 const tabs = [
   { to: '/',         icon: LayoutDashboard, label: 'Home'     },
   { to: '/contacts', icon: Users,           label: 'Contacts' },
@@ -11,13 +23,12 @@ const tabs = [
   { to: '/settings', icon: Settings,        label: 'Settings' },
 ]
 
-// Expanded bubble: dark translucent fill + subtle glass ring (no colour)
-const POP_BG     = 'rgba(18, 18, 22, 0.68)'
-const POP_BORDER = '1.5px solid rgba(255, 255, 255, 0.18)'
+const POP_BORDER = '1.5px solid rgba(150, 150, 160, 0.25)'
 
 export default function BottomTabBar() {
   const { pathname } = useLocation()
   const navigate     = useNavigate()
+  const dark         = useDark()
 
   const activeIndex = tabs.findIndex(({ to }) =>
     to === '/' ? pathname === '/' : pathname.startsWith(to)
@@ -61,14 +72,16 @@ export default function BottomTabBar() {
   const n          = tabs.length
   const isPopped   = phase === 'pop' || phase === 'travel'
 
-  // Bubble geometry
-  const idleH  = 50   // px — pill height
-  const popH   = 68   // px — expanded circle diameter
-  const h      = isPopped ? popH   : idleH
-  const scale  = isPopped ? 1.14   : 1
-  const radius = isPopped ? '50%'  : '18px'
-  const bg     = isPopped ? POP_BG   : '#18181b'
-  const border = isPopped ? POP_BORDER : 'none'
+  // Bubble geometry — colours adapt to light / dark mode
+  const idleH    = 50
+  const popH     = 68
+  const h        = isPopped ? popH  : idleH
+  const scale    = isPopped ? 1.14  : 1
+  const radius   = isPopped ? '50%' : '18px'
+  const idleBg   = dark ? '#18181b' : 'rgba(0,0,0,0.08)'
+  const popBg    = dark ? 'rgba(18,18,22,0.68)' : 'rgba(255,255,255,0.55)'
+  const bg       = isPopped ? popBg   : idleBg
+  const border   = isPopped ? POP_BORDER : 'none'
 
   const leftVal = `calc(${bubbleIdx} * 100% / ${n})`
   const widthVal = `calc(100% / ${n})`
@@ -90,7 +103,7 @@ export default function BottomTabBar() {
       <div className="mx-4 mb-4">
         {/* Outer dark pill */}
         <div
-          className="relative flex bg-gray-900/90 backdrop-blur-2xl rounded-[28px] border border-white/[0.07] shadow-2xl shadow-black/60"
+          className="relative flex bg-white/70 dark:bg-gray-900/88 backdrop-blur-2xl rounded-[28px] border border-black/[0.06] dark:border-white/[0.07] shadow-xl shadow-black/10 dark:shadow-black/60"
           style={{ padding: 6 }}
         >
           {/* ── Sliding bubble indicator ── */}
@@ -126,8 +139,12 @@ export default function BottomTabBar() {
                 <Icon
                   size={isActive ? 21 : 19}
                   strokeWidth={isActive ? 2.5 : 2}
-                  style={{ position: 'relative', zIndex: 2, transition: 'color 200ms' }}
-                  className={isActive ? 'text-white' : 'text-gray-500'}
+                  style={{
+                    position: 'relative', zIndex: 2, transition: 'color 200ms',
+                    color: isActive
+                      ? (dark ? 'white' : '#111827')
+                      : (dark ? '#6b7280' : '#9ca3af'),
+                  }}
                 />
 
                 {/* Label only on active tab */}
@@ -143,7 +160,7 @@ export default function BottomTabBar() {
                     opacity:    isActive ? 1  : 0,
                     overflow:   'hidden',
                     transition: 'max-height 220ms ease, opacity 180ms ease',
-                    color:      'white',
+                    color:      dark ? 'white' : '#111827',
                   }}
                 >
                   {label}
