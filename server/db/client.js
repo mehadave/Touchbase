@@ -12,6 +12,8 @@ const pool = new Pool({
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
   ssl: isSupabase ? { rejectUnauthorized: false } : false,
+  // Force IPv4 — Render's free tier can't reach Supabase over IPv6
+  family: 4,
 })
 
 pool.on('error', (err) => {
