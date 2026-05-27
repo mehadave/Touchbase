@@ -144,7 +144,7 @@ export default function Settings() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Default follow-up frequency</label>
             <select
               value={settings?.default_follow_up_frequency || 30}
-              onChange={e => updateSettings({ default_follow_up_frequency: Number(e.target.value) })}
+              onChange={e => updateSettings({ default_follow_up_frequency: Number(e.target.value) }).catch(() => addToast('Failed to save — please try again', 'error'))}
               className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
             >
               {freqOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -164,10 +164,14 @@ export default function Settings() {
               <button
                 onClick={async () => {
                   const next = !settings?.streak_reminder_enabled
-                  await updateSettings({ streak_reminder_enabled: next })
-                  // If turning on and push not yet set up, prompt
-                  if (next && !pushSubscribed && typeof Notification !== 'undefined' && notifPermission !== 'denied') {
-                    await requestNotifications()
+                  try {
+                    await updateSettings({ streak_reminder_enabled: next })
+                    // If turning on and push not yet set up, prompt
+                    if (next && !pushSubscribed && typeof Notification !== 'undefined' && notifPermission !== 'denied') {
+                      await requestNotifications()
+                    }
+                  } catch {
+                    addToast('Failed to save — please try again', 'error')
                   }
                 }}
                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
@@ -241,7 +245,11 @@ export default function Settings() {
             ].map(t => (
               <button
                 key={t.value}
-                onClick={() => updateSettings({ app_tone: t.value })}
+                onClick={() =>
+                  updateSettings({ app_tone: t.value }).catch(() =>
+                    addToast('Failed to save tone — please try again', 'error')
+                  )
+                }
                 className={`text-left rounded-xl px-4 py-3 border transition-all ${
                   (settings?.app_tone || 'millennial') === t.value
                     ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20'
