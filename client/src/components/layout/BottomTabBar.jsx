@@ -147,20 +147,17 @@ export default function BottomTabBar() {
                   }}
                 />
 
-                {/* Label only on active tab */}
                 <span
                   style={{
-                    position:   'relative',
-                    zIndex:     2,
-                    fontSize:   10,
-                    fontWeight: 600,
-                    lineHeight: 1,
+                    position:      'relative',
+                    zIndex:        2,
+                    fontSize:      10,
+                    fontWeight:    isActive ? 600 : 500,
+                    lineHeight:    1,
                     letterSpacing: '-0.01em',
-                    maxHeight:  isActive ? 12 : 0,
-                    opacity:    isActive ? 1  : 0,
-                    overflow:   'hidden',
-                    transition: 'max-height 220ms ease, opacity 180ms ease',
-                    color:      dark ? 'white' : '#111827',
+                    color: isActive
+                      ? (dark ? 'white'   : '#111827')
+                      : (dark ? '#6b7280' : '#9ca3af'),
                   }}
                 >
                   {label}
