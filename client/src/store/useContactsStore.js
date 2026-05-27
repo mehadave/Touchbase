@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import * as contactsApi from '../api/contacts.js'
-import { useUIStore } from './useUIStore.js'
+import { useUIStore } from './useUIStore.js' // used by create/update/delete actions
 
 export const useContactsStore = create((set, get) => ({
   contacts: [],
@@ -33,13 +33,10 @@ export const useContactsStore = create((set, get) => ({
       })
       const data = await contactsApi.listContacts(query)
       set({ contacts: data, loading: false })
-    } catch (err) {
+    } catch {
+      // Silently fail — empty state shows if contacts can't load,
+      // no toast needed since the user can see nothing loaded.
       set({ loading: false })
-      // Don't show error for 404 or empty results — just means no contacts yet
-      const status = err?.status ?? err?.statusCode ?? err?.response?.status
-      if (status !== 404 && err?.message !== 'No contacts found') {
-        useUIStore.getState().addToast('Failed to load contacts', 'error')
-      }
     }
   },
 

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Plus, Upload, SlidersHorizontal, Search, X, Users } from 'lucide-react'
 import ContactCard from '../components/contacts/ContactCard.jsx'
 import ContactDetail from '../components/contacts/ContactDetail.jsx'
@@ -23,12 +23,18 @@ export default function Contacts() {
   const [addLoading, setAddLoading]           = useState(false)
   const [localSearch, setLocalSearch]         = useState(filters.search || '')
   const debouncedSearch = useDebounce(localSearch, 300)
+  const mountedRef = useRef(false)
 
+  // Sync debounced search into the store filter (skip initial mount —
+  // the filters effect below handles the first fetch)
   useEffect(() => {
+    if (!mountedRef.current) return
     setFilter('search', debouncedSearch)
   }, [debouncedSearch])
 
+  // Single place that drives all fetches
   useEffect(() => {
+    mountedRef.current = true
     fetchContacts()
   }, [filters, sortBy])
 
