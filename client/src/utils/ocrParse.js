@@ -115,10 +115,29 @@ export function parseLinkedInOCR(text) {
     ? cleanLines.slice(0, sectionBreakIdx)
     : cleanLines.slice(0, 20)  // cap at 20 lines; name is always near the top
 
-  // The name is always the first meaningful line in the profile — it appears before
-  // the headline, degree badge, and verified checkmark. After stripping those, just
-  // take the first line that passes the name check.
-  const nameLine = profileLines.find(l => looksLikeName(l) && !looksLikeLocation(l))
+  // Extract the name portion from a line by taking only the leading alphabetic words.
+  // Handles: "Kathie Huang ⊙ She/Her · 3rd" → "Kathie Huang"
+  //          "Dustin Chung ✓ 3rd"            → "Dustin Chung"
+  //          "Yehuda Alon 2nd"               → "Yehuda Alon"
+  const extractLeadingName = (l) => {
+    const nameWords = []
+    for (const w of l.split(/\s+/)) {
+      if (/^[A-Za-z][A-Za-z''\-]*$/.test(w)) nameWords.push(w)
+      else break
+    }
+    return nameWords.join(' ')
+  }
+
+  // The name is always the first meaningful line — before headline, badge, pronouns,
+  // and connection degree. Extract leading name words and validate.
+  let nameLine = null
+  for (const l of profileLines) {
+    const candidate = extractLeadingName(l)
+    if (candidate && looksLikeName(candidate) && !looksLikeLocation(candidate)) {
+      nameLine = candidate
+      break
+    }
+  }
 
   const atPattern = /^(.+?)\s+(?:at|@)\s+(.+?)(?:\s*[|·•\-].*)?$/i
   const headlineLine = profileLines.find(l => atPattern.test(l) && looksLikeTitle(l))
