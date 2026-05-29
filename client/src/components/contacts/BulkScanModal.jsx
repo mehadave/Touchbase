@@ -54,7 +54,25 @@ export default function BulkScanModal({ open, onClose, onImported }) {
     setImportResults({})
   }, [cleanup])
 
-  const handleClose = () => { reset(); onClose() }
+  // If there are already-scanned contacts, stop the scan and drop into review
+  // so the user can import what's done. Only hard-close if nothing was scanned.
+  const handleClose = () => {
+    const doneSoFar = contacts.filter(c => c.status === 'done').length
+    if (doneSoFar > 0 && phase !== 'pick') {
+      // Stop workers & queue but keep the done contacts
+      abortRef.current = true
+      workersRef.current.forEach(w => { try { w.terminate() } catch {} })
+      workersRef.current = []
+      queueRef.current = []
+      // Drop pending/scanning cards (they're useless now) and go to review
+      setContacts(prev => prev.filter(c => c.status === 'done' || c.status === 'error'))
+      setPhase('review')
+    } else {
+      reset(); onClose()
+    }
+  }
+
+  const handleDiscard = () => { reset(); onClose() }
 
   // ── Worker pool scanner ────────────────────────────────────────────────────
   // Each "lane" pulls from queueRef and processes one image at a time.
@@ -439,8 +457,8 @@ export default function BulkScanModal({ open, onClose, onImported }) {
               {doneCount} contact{doneCount !== 1 ? 's' : ''} ready to import
             </p>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleClose} disabled={phase === 'importing'}>
-                Cancel
+              <Button variant="outline" size="sm" onClick={handleDiscard} disabled={phase === 'importing'}>
+                Discard & Close
               </Button>
               <Button
                 size="sm"
