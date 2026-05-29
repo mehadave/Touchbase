@@ -13,7 +13,17 @@ export function parseLinkedInOCR(text) {
     'experience', 'education', 'skills', 'recommendations', 'activity',
     'see all', 'show more', 'show less', 'view profile', 'open to',
     'add section', 'premium', 'try premium', '·', '•',
+    // Post-connection confirmation UI
+    'people you may know', 'people also viewed', 'people similar to',
+    'grow your network', 'suggested for you', 'others you may know',
+    'you are now connected', 'you are now following',
   ])
+
+  // Marks the start of "suggested people" sections — stop name search here
+  const isSectionBreak = (l) =>
+    /people (you may know|also viewed|similar to)/i.test(l) ||
+    /grow your network/i.test(l) ||
+    /suggested for you/i.test(l)
 
   const isNoise = (l) => {
     const lower = l.toLowerCase()
@@ -28,6 +38,7 @@ export function parseLinkedInOCR(text) {
       /your\s+invitation/i.test(l) ||
       /invitation\s+to\s+connect/i.test(l) ||
       /\bwas\s+sent\b/i.test(l) ||
+      /\band you are now\b/i.test(l) ||
       /\b(pending|withdraw|ignore|accept|decline)\b/i.test(l)
     )
   }
@@ -96,14 +107,20 @@ export function parseLinkedInOCR(text) {
   const emailMatch    = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)
   const phoneMatch    = text.match(/(\+\d[\d\s\-().]{8,15}|\(?\d{3}\)?[\s.\-]\d{3}[\s.\-]\d{4})/)
 
+  // Only search within the profile area — stop before any "People you may know" section
+  // which appears on post-connection confirmation screens and contains other people's names.
+  const sectionBreakIdx = cleanLines.findIndex(l => isSectionBreak(l))
+  const profileLines = sectionBreakIdx >= 0
+    ? cleanLines.slice(0, sectionBreakIdx)
+    : cleanLines.slice(0, 20)  // cap at 20 lines; name is always near the top
+
   // Name extraction: the name on LinkedIn is always the bold line immediately before
-  // the headline/title. Scan forward and find a title line whose preceding line is name-like.
+  // the headline/title. Scan forward within the profile area.
   let nameLine = null
-  for (let i = 1; i < cleanLines.length; i++) {
-    if (looksLikeTitle(cleanLines[i])) {
-      // Look back up to 3 lines for a name candidate
+  for (let i = 1; i < profileLines.length; i++) {
+    if (looksLikeTitle(profileLines[i])) {
       for (let j = i - 1; j >= Math.max(0, i - 3); j--) {
-        const candidate = cleanLines[j]
+        const candidate = profileLines[j]
         if (looksLikeName(candidate) && !looksLikeLocation(candidate)) {
           nameLine = candidate
           break
@@ -112,13 +129,13 @@ export function parseLinkedInOCR(text) {
       if (nameLine) break
     }
   }
-  // Fallback: direct scan if no title anchor found
+  // Fallback: direct scan within profile area
   if (!nameLine) {
-    nameLine = cleanLines.find(l => looksLikeName(l) && !looksLikeLocation(l))
+    nameLine = profileLines.find(l => looksLikeName(l) && !looksLikeLocation(l))
   }
 
   const atPattern = /^(.+?)\s+(?:at|@)\s+(.+?)(?:\s*[|·•\-].*)?$/i
-  const headlineLine = cleanLines.find(l => atPattern.test(l) && looksLikeTitle(l))
+  const headlineLine = profileLines.find(l => atPattern.test(l) && looksLikeTitle(l))
 
   let jobTitle = null
   let company  = null
@@ -130,11 +147,11 @@ export function parseLinkedInOCR(text) {
       company  = m[2].trim().replace(/\s*[-–—·•]+\s*$/, '')
     }
   } else {
-    const titleLine = cleanLines.find(l => looksLikeTitle(l) && l !== nameLine)
+    const titleLine = profileLines.find(l => looksLikeTitle(l) && l !== nameLine)
     if (titleLine) jobTitle = titleLine
-    const titleIdx = titleLine ? cleanLines.indexOf(titleLine) : -1
+    const titleIdx = titleLine ? profileLines.indexOf(titleLine) : -1
     if (titleIdx >= 0) {
-      const next = cleanLines.slice(titleIdx + 1).find(l =>
+      const next = profileLines.slice(titleIdx + 1).find(l =>
         l.length < 80 && !looksLikeTitle(l) && !looksLikeLocation(l) &&
         !l.includes('@') && !/^\d/.test(l) &&
         !UNIVERSITY_KEYWORDS.some(k => l.toLowerCase().includes(k))
@@ -143,8 +160,8 @@ export function parseLinkedInOCR(text) {
     }
   }
 
-  // University: first line containing a university keyword, excluding title lines
-  const universityLine = cleanLines.find(l =>
+  // University: first line in profile area containing a university keyword
+  const universityLine = profileLines.find(l =>
     UNIVERSITY_KEYWORDS.some(k => l.toLowerCase().includes(k)) &&
     !looksLikeTitle(l) &&
     l.length < 120
