@@ -19,6 +19,7 @@ export default function BulkScanModal({ open, onClose, onImported }) {
   const [newConfName, setNewConfName]     = useState('')
   const [sharedTags, setSharedTags]       = useState('')
   const [importResults, setImportResults] = useState({})
+  const [linkedinSearching, setLinkedInSearching] = useState(new Set())
 
   // Queue state — kept in refs so the async scanner loop can always see current values
   const queueRef      = useRef([])   // array of { id, file } waiting to be scanned
@@ -193,6 +194,26 @@ export default function BulkScanModal({ open, onClose, onImported }) {
     setContacts(prev => prev.map(c =>
       c.id === id ? { ...c, override: { ...c.override, [key]: val } } : c
     ))
+
+  // Per-card LinkedIn URL lookup: call API first, fall back to opening search
+  const handleFindLinkedIn = useCallback(async (contactId, name, company) => {
+    setLinkedInSearching(prev => new Set([...prev, contactId]))
+    try {
+      const result = await findLinkedIn(name, company)
+      if (result?.url) {
+        setOverride(contactId, 'linkedinUrl', result.url)
+        return
+      }
+    } catch { /* fall through to search */ }
+    finally {
+      setLinkedInSearching(prev => { const n = new Set(prev); n.delete(contactId); return n })
+    }
+    // No URL found — open LinkedIn search so user can find and paste it manually
+    window.open(
+      `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent([name, company].filter(Boolean).join(' '))}`,
+      '_blank', 'noreferrer'
+    )
+  }, [])
 
   // Switch to review once everything has settled; flag within-batch name dupes
   const allDone = contacts.length > 0 && contacts.every(c => c.status === 'done' || c.status === 'error')
@@ -445,14 +466,21 @@ export default function BulkScanModal({ open, onClose, onImported }) {
                               className={`${field} text-xs py-1 flex-1 min-w-0`}
                             />
                             {!(c.override.linkedinUrl ?? c.parsed.linkedinUrl) && (c.override.fullName ?? c.parsed.fullName) && (
-                              <a
-                                href={`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent([c.override.fullName ?? c.parsed.fullName, c.override.company ?? c.parsed.company].filter(Boolean).join(' '))}`}
-                                target="_blank" rel="noreferrer"
-                                title="Find on LinkedIn"
-                                className="shrink-0 text-blue-400 hover:text-blue-600"
+                              <button
+                                type="button"
+                                onClick={() => handleFindLinkedIn(
+                                  c.id,
+                                  c.override.fullName ?? c.parsed.fullName,
+                                  c.override.company  ?? c.parsed.company
+                                )}
+                                disabled={linkedinSearching.has(c.id)}
+                                title="Find LinkedIn profile URL"
+                                className="shrink-0 text-blue-400 hover:text-blue-600 disabled:opacity-40"
                               >
-                                <ExternalLink size={12} />
-                              </a>
+                                {linkedinSearching.has(c.id)
+                                  ? <Loader2 size={12} className="animate-spin" />
+                                  : <ExternalLink size={12} />}
+                              </button>
                             )}
                           </div>
                         </div>

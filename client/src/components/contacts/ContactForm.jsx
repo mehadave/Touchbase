@@ -298,14 +298,31 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
               className={`${field} flex-1`}
             />
             {!form.linkedinUrl && form.fullName && (
-              <a
-                href={linkedInSearchUrl(form.fullName, form.company)}
-                target="_blank" rel="noreferrer"
-                title="Search LinkedIn"
-                className="shrink-0 flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs text-blue-500 hover:text-blue-600 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition"
+              <button
+                type="button"
+                disabled={ocrLoading}
+                onClick={async () => {
+                  setOcrLoading(true)
+                  setOcrStatus('Finding LinkedIn profile…')
+                  try {
+                    const result = await findLinkedIn(form.fullName, form.company)
+                    if (result?.url) {
+                      set('linkedinUrl', result.url)
+                      setOcrStatus('LinkedIn profile found ✓')
+                    } else {
+                      setOcrStatus('not_found')
+                    }
+                  } catch {
+                    setOcrStatus('not_found')
+                  } finally {
+                    setOcrLoading(false)
+                  }
+                }}
+                title="Find LinkedIn profile URL"
+                className="shrink-0 flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs text-blue-500 hover:text-blue-600 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition disabled:opacity-50"
               >
-                <ExternalLink size={12} /> Find
-              </a>
+                {ocrLoading ? <Spinner size={12} className="animate-spin" /> : <ExternalLink size={12} />} Find
+              </button>
             )}
           </div>
 
