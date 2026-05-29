@@ -111,9 +111,13 @@ export function parseLinkedInOCR(text) {
         return core === core.toUpperCase()
       })
     ) return false
-    // Reject job-title / headline lines — handles OCR ordering surprises where
-    // the headline is output before the name (banner area scanned first)
-    if (looksLikeTitle(l)) return false
+    // Reject lines that start with common English articles/prepositions — not first names.
+    // Catches banner text like "The AI DevOps Engineer" before extractLeadingName runs.
+    if (/^(the|an|a|of|or|and|for|with|by|at|in|on|is|as|be|are|was)\b/i.test(l)) return false
+    // Reject lines that contain unambiguous job-title words at word boundaries.
+    // Uses \b (not substring) so "Stafford" is NOT rejected by "staff", "Fellows" NOT by "fellow".
+    // Handles OCR ordering surprises where banner/headline text is output before the name.
+    if (/\b(engineer|developer|designer|director|manager|analyst|consultant|coordinator|specialist|strategist|advisor|executive|scientist|researcher|professor|attorney|architect|president|officer|founder|contractor|freelance|trainee|apprentice|associate|intern|senior|principal|partner)\b/i.test(l)) return false
     // Any lowercase word must be a known name particle (de, van, la…)
     const lowercaseWords = words.filter(w => /^[a-z]/.test(w))
     if (lowercaseWords.some(w => !NAME_PARTICLES.has(w.replace(/\.$/, '')))) return false
@@ -159,6 +163,10 @@ export function parseLinkedInOCR(text) {
   let nameLineIdx = 0
   for (let i = 0; i < Math.min(profileLines.length, 5); i++) {
     const l = profileLines[i]
+    // Lines with | or * are headline/bio fragments ("Tech Capitalist | MIT…", "Judge * Impact…")
+    // Skip them — names never contain these characters.
+    // Note: / is intentionally NOT skipped because "She/Her" pronouns appear on name lines.
+    if (/[|*]/.test(l)) continue
     const stripped = l.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim()
     const candidate = extractLeadingName(stripped)
     if (candidate && looksLikeName(candidate) && !looksLikeLocation(candidate)) {
