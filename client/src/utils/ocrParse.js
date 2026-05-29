@@ -17,6 +17,8 @@ export function parseLinkedInOCR(text) {
     'people you may know', 'people also viewed', 'people similar to',
     'grow your network', 'suggested for you', 'others you may know',
     'you are now connected', 'you are now following',
+    'learn more', 'book an appointment', 'introduce myself',
+    'profile enhanced with premium', 'highlights',
   ])
 
   // Marks the start of "suggested people" sections — stop name search here
@@ -39,6 +41,8 @@ export function parseLinkedInOCR(text) {
       /invitation\s+to\s+connect/i.test(l) ||
       /\bwas\s+sent\b/i.test(l) ||
       /\band you are now\b/i.test(l) ||
+      /\binvitation\s+from\b/i.test(l) ||   // "Invitation from X accepted"
+      /\bis a new connection\b/i.test(l) ||  // "X is a new connection"
       /\b(pending|withdraw|ignore|accept|decline)\b/i.test(l)
     )
   }
@@ -69,7 +73,7 @@ export function parseLinkedInOCR(text) {
   ]
 
   // Word-boundary matched — avoids false positives like "mit" inside "committed"
-  const UNIVERSITY_RE = /\b(university|universidad|college|institute|polytechnic|academy|seminary|iit|iim|mit|caltech)\b/i
+  const UNIVERSITY_RE = /\b(university|universidad|college|school|institute|polytechnic|academy|seminary|iit|iim|mit|caltech)\b/i
 
   const looksLikeTitle = (l) =>
     TITLE_KEYWORDS.some(k => l.toLowerCase().includes(k)) && l.length < 120
@@ -98,6 +102,15 @@ export function parseLinkedInOCR(text) {
     if (!/^[A-Z]/.test(words[0])) return false
     // Every word: letters/apostrophes/hyphens, optionally ending with a dot (Dr., J., Jr.)
     if (!words.every(w => /^[A-Za-z][A-Za-z''\-]*\.?$/.test(w))) return false
+    // Reject ALL_CAPS noise (e.g. banner text misread as a name: "AN GT", "JIRU NR")
+    const multiCharWords = words.filter(w => w.replace(/\.$/, '').length > 1)
+    if (
+      multiCharWords.length > 0 &&
+      multiCharWords.every(w => {
+        const core = w.replace(/\.$/, '')
+        return core === core.toUpperCase()
+      })
+    ) return false
     // Any lowercase word must be a known name particle (de, van, la…)
     const lowercaseWords = words.filter(w => /^[a-z]/.test(w))
     if (lowercaseWords.some(w => !NAME_PARTICLES.has(w.replace(/\.$/, '')))) return false
@@ -117,14 +130,20 @@ export function parseLinkedInOCR(text) {
 
   // Extract the name portion from a line by taking only leading name-valid words.
   // Allows trailing dots for initials/honorifics: "Dr.", "J.", "Jr."
-  // Handles: "Kathie Huang ⊙ She/Her · 3rd" → "Kathie Huang"
-  //          "Dr. John Smith 2nd"            → "Dr. John Smith"
-  //          "J. Robert Oppenheimer ✓ 3rd"   → "J. Robert Oppenheimer"
+  // Stops at: non-alpha characters, camelCase words (headline text), commas.
+  // Mac/Mc prefix (McDonald, McGregor) is allowed despite internal uppercase.
   const extractLeadingName = (l) => {
     const nameWords = []
     for (const w of l.split(/\s+/)) {
-      if (/^[A-Za-z][A-Za-z''\-]*\.?$/.test(w)) nameWords.push(w)
-      else break
+      // Strip trailing comma — name ends after this word
+      const clean = w.replace(/,+$/, '')
+      if (!/^[A-Za-z][A-Za-z''\-]*\.?$/.test(clean)) break
+      // Stop at camelCase words (e.g. "AnEmpathy", "StartUp") — likely headline bleed
+      const isMcMac = /^Ma?c[A-Z]/.test(clean)
+      if (!isMcMac && /[a-z][A-Z]/.test(clean)) break
+      nameWords.push(clean)
+      // Trailing comma means the name ended here (e.g. "Vince Kohli,An Empathy...")
+      if (clean !== w) break
     }
     return nameWords.join(' ')
   }
@@ -139,6 +158,21 @@ export function parseLinkedInOCR(text) {
     if (candidate && looksLikeName(candidate) && !looksLikeLocation(candidate)) {
       nameLine = candidate
       break
+    }
+  }
+
+  // Consecutive-pair fallback: some OCR outputs split first + last name across two lines
+  // (e.g. "Vince" on line N and "Kohli,An Empathy..." on line N+1).
+  // Try joining adjacent lines and re-extracting if single-line search failed.
+  if (!nameLine) {
+    for (let i = 0; i < profileLines.length - 1; i++) {
+      const joined = [profileLines[i], profileLines[i + 1]].join(' ')
+      const stripped = joined.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim()
+      const candidate = extractLeadingName(stripped)
+      if (candidate && looksLikeName(candidate) && !looksLikeLocation(candidate)) {
+        nameLine = candidate
+        break
+      }
     }
   }
 
