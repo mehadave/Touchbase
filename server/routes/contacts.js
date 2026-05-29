@@ -55,39 +55,31 @@ async function upsertTags(contactId, tagNames) {
 }
 
 // GET /api/contacts/find-linkedin?name=...&company=...
-// Uses Brave Search API (free tier: 2000 req/month). Set BRAVE_SEARCH_API_KEY in env.
+// Uses Google Custom Search API (free: 100 queries/day, no credit card).
+// Requires GOOGLE_CSE_KEY (API key) + GOOGLE_CSE_CX (Search Engine ID) in env.
 router.get('/find-linkedin', async (req, res, next) => {
   try {
     const { name, company } = req.query
     if (!name?.trim()) return res.status(400).json({ error: 'name is required' })
 
-    const apiKey = process.env.BRAVE_SEARCH_API_KEY
-    if (!apiKey) return res.json({ url: null })
+    const apiKey = process.env.GOOGLE_CSE_KEY
+    const cx     = process.env.GOOGLE_CSE_CX
+    if (!apiKey || !cx) return res.json({ url: null })
 
     const terms = [name.trim(), company?.trim()].filter(Boolean)
     const q = encodeURIComponent(`site:linkedin.com/in ${terms.map(t => `"${t}"`).join(' ')}`)
 
-    const response = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${q}&count=5`, {
-      headers: {
-        'Accept': 'application/json',
-        'Accept-Encoding': 'gzip',
-        'X-Subscription-Token': apiKey,
-      },
-      signal: AbortSignal.timeout(8000),
-    })
+    const response = await fetch(
+      `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${q}&num=3`,
+      { signal: AbortSignal.timeout(8000) }
+    )
 
     if (!response.ok) return res.json({ url: null })
 
     const data = await response.json()
-    const results = data?.web?.results ?? []
-
-    for (const r of results) {
-      // Check the result URL directly
-      const urlMatch = (r.url || '').match(/linkedin\.com\/in\/([\w-]{3,60})/i)
-      if (urlMatch) return res.json({ url: `https://www.linkedin.com/in/${urlMatch[1]}` })
-      // Also check the snippet/title for a LinkedIn URL
-      const textMatch = `${r.title || ''} ${r.description || ''}`.match(/linkedin\.com\/in\/([\w-]{3,60})/i)
-      if (textMatch) return res.json({ url: `https://www.linkedin.com/in/${textMatch[1]}` })
+    for (const item of data.items ?? []) {
+      const match = (item.link || '').match(/linkedin\.com\/in\/([\w-]{3,60})/i)
+      if (match) return res.json({ url: `https://www.linkedin.com/in/${match[1]}` })
     }
 
     res.json({ url: null })
