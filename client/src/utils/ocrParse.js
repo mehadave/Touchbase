@@ -45,10 +45,13 @@ export function parseLinkedInOCR(text) {
 
   const cleanLines = lines
     .map(l => l
-      // Strip LinkedIn connection degree badge: "• 2nd", "© 2m", "® 3rd", etc.
-      // (OCR often misreads • as © or ®, and "2nd" as "2m")
-      .replace(/\s*[·•©®°]\s*\d+\w*\s*$/i, '')
-      .replace(/\s+[@©®™✓✔☑]\s*$/, '')
+      // Strip badge symbol + connection degree: "· 2nd", "© 2m", "✓ 3rd", "® 3rd+"
+      // (OCR misreads • as © / ® / ✓, and "2nd" as "2m")
+      .replace(/\s*[·•©®°✓✔☑@*|]+\s*\d+\w*\+?\s*$/i, '')
+      // Strip a bare trailing connection degree (no symbol): "Yehuda Alon 2nd"
+      .replace(/\s+(1st|2nd|3rd\+?|\d{1,2}(?:st|nd|rd|th))\s*$/i, '')
+      // Strip any leftover trailing badge symbols / separators
+      .replace(/[\s·•©®™✓✔☑@*|]+$/, '')
       .trim()
     )
     .filter(l => l.length > 0 && !isNoise(l))
@@ -65,10 +68,8 @@ export function parseLinkedInOCR(text) {
     'intern', 'apprentice', 'trainee', 'fellow', 'contractor', 'freelance',
   ]
 
-  const UNIVERSITY_KEYWORDS = [
-    'university', 'college', 'institute', 'school', 'polytechnic',
-    'academy', 'iit', 'iim', 'mit', 'caltech', 'seminary',
-  ]
+  // Word-boundary matched — avoids false positives like "mit" inside "committed"
+  const UNIVERSITY_RE = /\b(university|universidad|college|institute|polytechnic|academy|seminary|iit|iim|mit|caltech)\b/i
 
   const looksLikeTitle = (l) =>
     TITLE_KEYWORDS.some(k => l.toLowerCase().includes(k)) && l.length < 120
@@ -154,18 +155,26 @@ export function parseLinkedInOCR(text) {
       const next = profileLines.slice(titleIdx + 1).find(l =>
         l.length < 80 && !looksLikeTitle(l) && !looksLikeLocation(l) &&
         !l.includes('@') && !/^\d/.test(l) &&
-        !UNIVERSITY_KEYWORDS.some(k => l.toLowerCase().includes(k))
+        !UNIVERSITY_RE.test(l)
       )
       if (next) company = next.split(/\s*[-–—·•]\s*/)[0].trim()
     }
   }
 
-  // University: first line in profile area containing a university keyword
-  const universityLine = profileLines.find(l =>
-    UNIVERSITY_KEYWORDS.some(k => l.toLowerCase().includes(k)) &&
-    !looksLikeTitle(l) &&
-    l.length < 120
+  // University: first profile line containing a university keyword. The education
+  // line is often "Company · School" — split on separators and keep the segment
+  // that actually names the school.
+  const universityLineRaw = profileLines.find(l =>
+    UNIVERSITY_RE.test(l) && !looksLikeTitle(l) && l.length < 120
   )
+  let university = ''
+  if (universityLineRaw) {
+    const segments = universityLineRaw
+      .split(/\s+[·•|–—-]+\s+/)
+      .map(s => s.trim())
+      .filter(Boolean)
+    university = segments.find(s => UNIVERSITY_RE.test(s)) || universityLineRaw
+  }
 
   const aboutMatch = text.match(/\bAbout\b[\s\n]+([\s\S]+?)(?=\n\s*(?:Activity|Experience|Education|Skills|Recommendations|Posts|Comments|Images|\d[\d,]*\s*follower))/i)
   const notes = aboutMatch
@@ -176,7 +185,7 @@ export function parseLinkedInOCR(text) {
     fullName:    nameLine        || '',
     jobTitle:    jobTitle        || '',
     company:     company         || '',
-    university:  universityLine  || '',
+    university:  university       || '',
     email:       emailMatch ? emailMatch[0] : '',
     phone:       phoneMatch ? phoneMatch[0].trim() : '',
     linkedinUrl: linkedinMatch ? `https://linkedin.com/in/${linkedinMatch[1]}` : '',
