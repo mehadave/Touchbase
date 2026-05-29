@@ -88,19 +88,19 @@ export function parseLinkedInOCR(text) {
   ])
 
   const looksLikeName = (l) => {
-    if (l.length < 3 || l.length > 50) return false
+    if (l.length < 3 || l.length > 60) return false
     if (/\d/.test(l)) return false
     if (l.includes('@') || l.includes('http') || l.includes('/') || l.includes('|')) return false
     const words = l.split(/\s+/).filter(Boolean)
     // LinkedIn always shows first + last name — require at least 2 words
-    if (words.length < 2 || words.length > 5) return false
+    if (words.length < 2 || words.length > 6) return false
     // First word must start with uppercase
     if (!/^[A-Z]/.test(words[0])) return false
-    // Every word must start AND end with a letter (no leading/trailing hyphens)
-    if (!words.every(w => /^[A-Za-z][A-Za-z''\-]*[A-Za-z]$/.test(w) || /^[A-Za-z]$/.test(w))) return false
+    // Every word: letters/apostrophes/hyphens, optionally ending with a dot (Dr., J., Jr.)
+    if (!words.every(w => /^[A-Za-z][A-Za-z''\-]*\.?$/.test(w))) return false
     // Any lowercase word must be a known name particle (de, van, la…)
     const lowercaseWords = words.filter(w => /^[a-z]/.test(w))
-    if (lowercaseWords.some(w => !NAME_PARTICLES.has(w))) return false
+    if (lowercaseWords.some(w => !NAME_PARTICLES.has(w.replace(/\.$/, '')))) return false
     return true
   }
 
@@ -115,24 +115,27 @@ export function parseLinkedInOCR(text) {
     ? cleanLines.slice(0, sectionBreakIdx)
     : cleanLines.slice(0, 20)  // cap at 20 lines; name is always near the top
 
-  // Extract the name portion from a line by taking only the leading alphabetic words.
+  // Extract the name portion from a line by taking only leading name-valid words.
+  // Allows trailing dots for initials/honorifics: "Dr.", "J.", "Jr."
   // Handles: "Kathie Huang ⊙ She/Her · 3rd" → "Kathie Huang"
-  //          "Dustin Chung ✓ 3rd"            → "Dustin Chung"
-  //          "Yehuda Alon 2nd"               → "Yehuda Alon"
+  //          "Dr. John Smith 2nd"            → "Dr. John Smith"
+  //          "J. Robert Oppenheimer ✓ 3rd"   → "J. Robert Oppenheimer"
   const extractLeadingName = (l) => {
     const nameWords = []
     for (const w of l.split(/\s+/)) {
-      if (/^[A-Za-z][A-Za-z''\-]*$/.test(w)) nameWords.push(w)
+      if (/^[A-Za-z][A-Za-z''\-]*\.?$/.test(w)) nameWords.push(w)
       else break
     }
     return nameWords.join(' ')
   }
 
   // The name is always the first meaningful line — before headline, badge, pronouns,
-  // and connection degree. Extract leading name words and validate.
+  // and connection degree. Strip parenthetical nicknames first, then extract leading words.
+  // "David (Dave) Chen ✓ 2nd" → strip parens → "David Chen ✓ 2nd" → extract → "David Chen"
   let nameLine = null
   for (const l of profileLines) {
-    const candidate = extractLeadingName(l)
+    const stripped = l.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim()
+    const candidate = extractLeadingName(stripped)
     if (candidate && looksLikeName(candidate) && !looksLikeLocation(candidate)) {
       nameLine = candidate
       break
@@ -167,7 +170,8 @@ export function parseLinkedInOCR(text) {
 
   // University: first profile line containing a university keyword. The education
   // line is often "Company · School" — split on separators and keep the segment
-  // that actually names the school.
+  // that actually names the school. Also extract company from before the school
+  // if company wasn't found from the headline.
   const universityLineRaw = profileLines.find(l =>
     UNIVERSITY_RE.test(l) && !looksLikeTitle(l) && l.length < 120
   )
@@ -177,7 +181,12 @@ export function parseLinkedInOCR(text) {
       .split(/\s+[·•|–—-]+\s+/)
       .map(s => s.trim())
       .filter(Boolean)
-    university = segments.find(s => UNIVERSITY_RE.test(s)) || universityLineRaw
+    const uniIdx = segments.findIndex(s => UNIVERSITY_RE.test(s))
+    university = uniIdx >= 0 ? segments[uniIdx] : universityLineRaw
+    // If company not yet found, the segment immediately before the university is the company
+    if (!company && uniIdx > 0) {
+      company = segments[uniIdx - 1]
+    }
   }
 
   const aboutMatch = text.match(/\bAbout\b[\s\n]+([\s\S]+?)(?=\n\s*(?:Activity|Experience|Education|Skills|Recommendations|Posts|Comments|Images|\d[\d,]*\s*follower))/i)
