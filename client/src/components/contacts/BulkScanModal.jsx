@@ -59,13 +59,12 @@ export default function BulkScanModal({ open, onClose, onImported }) {
   // so the user can import what's done. Only hard-close if nothing was scanned.
   const handleClose = () => {
     const doneSoFar = contacts.filter(c => c.status === 'done').length
-    if (doneSoFar > 0 && phase !== 'pick') {
-      // Stop workers & queue but keep the done contacts
+    if (doneSoFar > 0 && phase === 'scan') {
+      // Mid-scan: stop workers and drop to review so done contacts aren't lost
       abortRef.current = true
       workersRef.current.forEach(w => { try { w.terminate() } catch {} })
       workersRef.current = []
       queueRef.current = []
-      // Drop pending/scanning cards (they're useless now) and go to review
       setContacts(prev => prev.filter(c => c.status === 'done' || c.status === 'error'))
       setPhase('review')
     } else {

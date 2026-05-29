@@ -111,6 +111,9 @@ export function parseLinkedInOCR(text) {
         return core === core.toUpperCase()
       })
     ) return false
+    // Reject job-title / headline lines — handles OCR ordering surprises where
+    // the headline is output before the name (banner area scanned first)
+    if (looksLikeTitle(l)) return false
     // Any lowercase word must be a known name particle (de, van, la…)
     const lowercaseWords = words.filter(w => /^[a-z]/.test(w))
     if (lowercaseWords.some(w => !NAME_PARTICLES.has(w.replace(/\.$/, '')))) return false
@@ -151,12 +154,16 @@ export function parseLinkedInOCR(text) {
   // The name is always the first meaningful line — before headline, badge, pronouns,
   // and connection degree. Strip parenthetical nicknames first, then extract leading words.
   // "David (Dave) Chen ✓ 2nd" → strip parens → "David Chen ✓ 2nd" → extract → "David Chen"
+  // Only search within the first 5 lines — name is never deeper.
   let nameLine = null
-  for (const l of profileLines) {
+  let nameLineIdx = 0
+  for (let i = 0; i < Math.min(profileLines.length, 5); i++) {
+    const l = profileLines[i]
     const stripped = l.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim()
     const candidate = extractLeadingName(stripped)
     if (candidate && looksLikeName(candidate) && !looksLikeLocation(candidate)) {
       nameLine = candidate
+      nameLineIdx = i
       break
     }
   }
@@ -165,19 +172,27 @@ export function parseLinkedInOCR(text) {
   // (e.g. "Vince" on line N and "Kohli,An Empathy..." on line N+1).
   // Try joining adjacent lines and re-extracting if single-line search failed.
   if (!nameLine) {
-    for (let i = 0; i < profileLines.length - 1; i++) {
+    for (let i = 0; i < Math.min(profileLines.length - 1, 4); i++) {
       const joined = [profileLines[i], profileLines[i + 1]].join(' ')
       const stripped = joined.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim()
       const candidate = extractLeadingName(stripped)
       if (candidate && looksLikeName(candidate) && !looksLikeLocation(candidate)) {
         nameLine = candidate
+        nameLineIdx = i + 1
         break
       }
     }
   }
 
+  // All title/company/university searches run on lines that follow the name.
+  // This prevents banner text (scanned before the name by Tesseract) from bleeding
+  // into job title or company fields.
+  const postNameLines = nameLine
+    ? profileLines.slice(nameLineIdx + 1)
+    : profileLines
+
   const atPattern = /^(.+?)\s+(?:at|@)\s+(.+?)(?:\s*[|·•\-].*)?$/i
-  const headlineLine = profileLines.find(l => atPattern.test(l) && looksLikeTitle(l))
+  const headlineLine = postNameLines.find(l => atPattern.test(l) && looksLikeTitle(l))
 
   let jobTitle = null
   let company  = null
@@ -186,14 +201,14 @@ export function parseLinkedInOCR(text) {
     const m = headlineLine.match(atPattern)
     if (m) {
       jobTitle = m[1].trim()
-      company  = m[2].trim().replace(/\s*[-–—·•]+\s*$/, '')
+      company  = m[2].trim().replace(/\s*[-–—·•.]+\s*$/, '')
     }
   } else {
-    const titleLine = profileLines.find(l => looksLikeTitle(l) && l !== nameLine)
+    const titleLine = postNameLines.find(l => looksLikeTitle(l) && l !== nameLine)
     if (titleLine) jobTitle = titleLine
-    const titleIdx = titleLine ? profileLines.indexOf(titleLine) : -1
+    const titleIdx = titleLine ? postNameLines.indexOf(titleLine) : -1
     if (titleIdx >= 0) {
-      const next = profileLines.slice(titleIdx + 1).find(l =>
+      const next = postNameLines.slice(titleIdx + 1).find(l =>
         l.length < 80 && !looksLikeTitle(l) && !looksLikeLocation(l) &&
         !l.includes('@') && !/^\d/.test(l) &&
         !UNIVERSITY_RE.test(l)
@@ -202,11 +217,11 @@ export function parseLinkedInOCR(text) {
     }
   }
 
-  // University: first profile line containing a university keyword. The education
+  // University: first post-name line containing a university keyword. The education
   // line is often "Company · School" — split on separators and keep the segment
   // that actually names the school. Also extract company from before the school
   // if company wasn't found from the headline.
-  const universityLineRaw = profileLines.find(l =>
+  const universityLineRaw = postNameLines.find(l =>
     UNIVERSITY_RE.test(l) && !looksLikeTitle(l) && l.length < 120
   )
   let university = ''
