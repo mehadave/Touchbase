@@ -17,8 +17,6 @@ export function parseLinkedInOCR(text) {
     'people you may know', 'people also viewed', 'people similar to',
     'grow your network', 'suggested for you', 'others you may know',
     'you are now connected', 'you are now following',
-    'learn more', 'book an appointment', 'introduce myself',
-    'profile enhanced with premium', 'highlights',
   ])
 
   // Marks the start of "suggested people" sections — stop name search here
@@ -41,8 +39,6 @@ export function parseLinkedInOCR(text) {
       /invitation\s+to\s+connect/i.test(l) ||
       /\bwas\s+sent\b/i.test(l) ||
       /\band you are now\b/i.test(l) ||
-      /\binvitation\s+from\b/i.test(l) ||   // "Invitation from X accepted"
-      /\bis a new connection\b/i.test(l) ||  // "X is a new connection"
       /\b(pending|withdraw|ignore|accept|decline)\b/i.test(l)
     )
   }
@@ -73,14 +69,10 @@ export function parseLinkedInOCR(text) {
   ]
 
   // Word-boundary matched — avoids false positives like "mit" inside "committed"
-  const UNIVERSITY_RE = /\b(university|universidad|college|school|institute|polytechnic|academy|seminary|iit|iim|mit|caltech)\b/i
+  const UNIVERSITY_RE = /\b(university|universidad|college|institute|polytechnic|academy|seminary|iit|iim|mit|caltech)\b/i
 
-  const looksLikeTitle = (l) => {
-    const lower = l.toLowerCase()
-    return TITLE_KEYWORDS.some(k =>
-      new RegExp(`\\b${k.replace(/\s+/g, '\\s+')}\\b`).test(lower)
-    ) && l.length < 120
-  }
+  const looksLikeTitle = (l) =>
+    TITLE_KEYWORDS.some(k => l.toLowerCase().includes(k)) && l.length < 120
 
   const looksLikeLocation = (l) =>
     /\b(area|metropolitan|county|district|province|region)\b/i.test(l) ||
@@ -106,18 +98,6 @@ export function parseLinkedInOCR(text) {
     if (!/^[A-Z]/.test(words[0])) return false
     // Every word: letters/apostrophes/hyphens, optionally ending with a dot (Dr., J., Jr.)
     if (!words.every(w => /^[A-Za-z][A-Za-z''\-]*\.?$/.test(w))) return false
-    // Reject ALL_CAPS noise (e.g. banner text misread as a name: "AN GT", "JIRU NR")
-    const multiCharWords = words.filter(w => w.replace(/\.$/, '').length > 1)
-    if (
-      multiCharWords.length > 0 &&
-      multiCharWords.every(w => {
-        const core = w.replace(/\.$/, '')
-        return core === core.toUpperCase()
-      })
-    ) return false
-    // Reject lines that start with common English articles/prepositions — not first names.
-    // Catches banner text like "The AI DevOps Engineer" before extractLeadingName runs.
-    if (/^(the|an|a|of|or|and|for|with|by|at|in|on|is|as|be|are|was)\b/i.test(l)) return false
     // Any lowercase word must be a known name particle (de, van, la…)
     const lowercaseWords = words.filter(w => /^[a-z]/.test(w))
     if (lowercaseWords.some(w => !NAME_PARTICLES.has(w.replace(/\.$/, '')))) return false
@@ -137,20 +117,14 @@ export function parseLinkedInOCR(text) {
 
   // Extract the name portion from a line by taking only leading name-valid words.
   // Allows trailing dots for initials/honorifics: "Dr.", "J.", "Jr."
-  // Stops at: non-alpha characters, camelCase words (headline text), commas.
-  // Mac/Mc prefix (McDonald, McGregor) is allowed despite internal uppercase.
+  // Handles: "Kathie Huang ⊙ She/Her · 3rd" → "Kathie Huang"
+  //          "Dr. John Smith 2nd"            → "Dr. John Smith"
+  //          "J. Robert Oppenheimer ✓ 3rd"   → "J. Robert Oppenheimer"
   const extractLeadingName = (l) => {
     const nameWords = []
     for (const w of l.split(/\s+/)) {
-      // Strip trailing comma — name ends after this word
-      const clean = w.replace(/,+$/, '')
-      if (!/^[A-Za-z][A-Za-z''\-]*\.?$/.test(clean)) break
-      // Stop at camelCase words (e.g. "AnEmpathy", "StartUp") — likely headline bleed
-      const isMcMac = /^Ma?c[A-Z]/.test(clean)
-      if (!isMcMac && /[a-z][A-Z]/.test(clean)) break
-      nameWords.push(clean)
-      // Trailing comma means the name ended here (e.g. "Vince Kohli,An Empathy...")
-      if (clean !== w) break
+      if (/^[A-Za-z][A-Za-z''\-]*\.?$/.test(w)) nameWords.push(w)
+      else break
     }
     return nameWords.join(' ')
   }
@@ -158,60 +132,18 @@ export function parseLinkedInOCR(text) {
   // The name is always the first meaningful line — before headline, badge, pronouns,
   // and connection degree. Strip parenthetical nicknames first, then extract leading words.
   // "David (Dave) Chen ✓ 2nd" → strip parens → "David Chen ✓ 2nd" → extract → "David Chen"
-  // Only search within the first 5 lines — name is never deeper.
   let nameLine = null
-  let nameLineIdx = 0
-  for (let i = 0; i < Math.min(profileLines.length, 5); i++) {
-    const l = profileLines[i]
+  for (const l of profileLines) {
     const stripped = l.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim()
     const candidate = extractLeadingName(stripped)
     if (candidate && looksLikeName(candidate) && !looksLikeLocation(candidate)) {
       nameLine = candidate
-      nameLineIdx = i
       break
     }
   }
 
-  // Consecutive-pair fallback: some OCR outputs split first + last name across two lines
-  // (e.g. "Vince" on line N and "Kohli, An Empathy..." on line N+1).
-  // Try joining adjacent lines and re-extracting if single-line search failed.
-  if (!nameLine) {
-    for (let i = 0; i < Math.min(profileLines.length - 1, 4); i++) {
-      const joined = [profileLines[i], profileLines[i + 1]].join(' ')
-      const stripped = joined.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim()
-      const candidate = extractLeadingName(stripped)
-      if (candidate && looksLikeName(candidate) && !looksLikeLocation(candidate)) {
-        nameLine = candidate
-        // If the candidate matches what line i alone gives, the name lives entirely on
-        // line i — don't advance past line i+1 so the headline on i+1 stays in scope.
-        const singleStripped = profileLines[i].replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim()
-        const singleCandidate = extractLeadingName(singleStripped)
-        nameLineIdx = (singleCandidate === candidate) ? i : i + 1
-        break
-      }
-    }
-  }
-
-  // All title/company/university searches run on lines that follow the name.
-  // This prevents banner text (scanned before the name by Tesseract) from bleeding
-  // into job title or company fields.
-  const postNameLines = nameLine
-    ? profileLines.slice(nameLineIdx + 1)
-    : profileLines
-
   const atPattern = /^(.+?)\s+(?:at|@)\s+(.+?)(?:\s*[|·•\-].*)?$/i
-  // Patterns whose left-hand side is not a job title ("Studied at X", "Based at Y")
-  const FALSE_AT_START = /^(studied|based|located|formerly|previously|worked|living|born|interned)\b/i
-  const isHeadlineLine = (l) => {
-    if (!atPattern.test(l)) return false
-    const m = l.match(atPattern)
-    return m && !FALSE_AT_START.test(m[1].trim())
-  }
-  // Try with looksLikeTitle first (high precision), then fall back to any valid "X at Y"
-  // so roles like "PM at Google", "SDR at HubSpot", "UX at IDEO", "HR at Meta" are captured.
-  const headlineLine =
-    postNameLines.find(l => isHeadlineLine(l) && looksLikeTitle(l)) ||
-    postNameLines.find(l => isHeadlineLine(l))
+  const headlineLine = profileLines.find(l => atPattern.test(l) && looksLikeTitle(l))
 
   let jobTitle = null
   let company  = null
@@ -220,21 +152,15 @@ export function parseLinkedInOCR(text) {
     const m = headlineLine.match(atPattern)
     if (m) {
       jobTitle = m[1].trim()
-      company  = m[2].trim()
-        .replace(/,\s+[a-z].*$/, '')   // strip ", description text" but keep ", Inc." / ", LLC"
-        .replace(/\s*[-–—·•.]+\s*$/, '')
+      company  = m[2].trim().replace(/\s*[-–—·•]+\s*$/, '')
     }
   } else {
-    const titleLine = postNameLines.find(l => looksLikeTitle(l) && l !== nameLine)
+    const titleLine = profileLines.find(l => looksLikeTitle(l) && l !== nameLine)
     if (titleLine) jobTitle = titleLine
-    const titleIdx = titleLine ? postNameLines.indexOf(titleLine) : -1
+    const titleIdx = titleLine ? profileLines.indexOf(titleLine) : -1
     if (titleIdx >= 0) {
-      // Exclude multi-word title lines, but allow single-word company names ("Salesforce",
-      // "Google") that looksLikeTitle would falsely flag via keyword substrings.
-      const looksLikeTitleMultiWord = (l) =>
-        l.trim().split(/\s+/).length >= 2 && looksLikeTitle(l)
-      const next = postNameLines.slice(titleIdx + 1).find(l =>
-        l.length < 80 && !looksLikeTitleMultiWord(l) && !looksLikeLocation(l) &&
+      const next = profileLines.slice(titleIdx + 1).find(l =>
+        l.length < 80 && !looksLikeTitle(l) && !looksLikeLocation(l) &&
         !l.includes('@') && !/^\d/.test(l) &&
         !UNIVERSITY_RE.test(l)
       )
@@ -242,11 +168,11 @@ export function parseLinkedInOCR(text) {
     }
   }
 
-  // University: first post-name line containing a university keyword. The education
+  // University: first profile line containing a university keyword. The education
   // line is often "Company · School" — split on separators and keep the segment
   // that actually names the school. Also extract company from before the school
   // if company wasn't found from the headline.
-  const universityLineRaw = postNameLines.find(l =>
+  const universityLineRaw = profileLines.find(l =>
     UNIVERSITY_RE.test(l) && !looksLikeTitle(l) && l.length < 120
   )
   let university = ''
