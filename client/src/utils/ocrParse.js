@@ -115,25 +115,10 @@ export function parseLinkedInOCR(text) {
     ? cleanLines.slice(0, sectionBreakIdx)
     : cleanLines.slice(0, 20)  // cap at 20 lines; name is always near the top
 
-  // Name extraction: the name on LinkedIn is always the bold line immediately before
-  // the headline/title. Scan forward within the profile area.
-  let nameLine = null
-  for (let i = 1; i < profileLines.length; i++) {
-    if (looksLikeTitle(profileLines[i])) {
-      for (let j = i - 1; j >= Math.max(0, i - 3); j--) {
-        const candidate = profileLines[j]
-        if (looksLikeName(candidate) && !looksLikeLocation(candidate)) {
-          nameLine = candidate
-          break
-        }
-      }
-      if (nameLine) break
-    }
-  }
-  // Fallback: direct scan within profile area
-  if (!nameLine) {
-    nameLine = profileLines.find(l => looksLikeName(l) && !looksLikeLocation(l))
-  }
+  // The name is always the first meaningful line in the profile — it appears before
+  // the headline, degree badge, and verified checkmark. After stripping those, just
+  // take the first line that passes the name check.
+  const nameLine = profileLines.find(l => looksLikeName(l) && !looksLikeLocation(l))
 
   const atPattern = /^(.+?)\s+(?:at|@)\s+(.+?)(?:\s*[|·•\-].*)?$/i
   const headlineLine = profileLines.find(l => atPattern.test(l) && looksLikeTitle(l))
