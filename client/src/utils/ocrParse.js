@@ -75,8 +75,12 @@ export function parseLinkedInOCR(text) {
   // Word-boundary matched — avoids false positives like "mit" inside "committed"
   const UNIVERSITY_RE = /\b(university|universidad|college|school|institute|polytechnic|academy|seminary|iit|iim|mit|caltech)\b/i
 
-  const looksLikeTitle = (l) =>
-    TITLE_KEYWORDS.some(k => l.toLowerCase().includes(k)) && l.length < 120
+  const looksLikeTitle = (l) => {
+    const lower = l.toLowerCase()
+    return TITLE_KEYWORDS.some(k =>
+      new RegExp(`\\b${k.replace(/\s+/g, '\\s+')}\\b`).test(lower)
+    ) && l.length < 120
+  }
 
   const looksLikeLocation = (l) =>
     /\b(area|metropolitan|county|district|province|region)\b/i.test(l) ||
@@ -200,7 +204,18 @@ export function parseLinkedInOCR(text) {
     : profileLines
 
   const atPattern = /^(.+?)\s+(?:at|@)\s+(.+?)(?:\s*[|·•\-].*)?$/i
-  const headlineLine = postNameLines.find(l => atPattern.test(l) && looksLikeTitle(l))
+  // Patterns whose left-hand side is not a job title ("Studied at X", "Based at Y")
+  const FALSE_AT_START = /^(studied|based|located|formerly|previously|worked|living|born|interned)\b/i
+  const isHeadlineLine = (l) => {
+    if (!atPattern.test(l)) return false
+    const m = l.match(atPattern)
+    return m && !FALSE_AT_START.test(m[1].trim())
+  }
+  // Try with looksLikeTitle first (high precision), then fall back to any valid "X at Y"
+  // so roles like "PM at Google", "SDR at HubSpot", "UX at IDEO", "HR at Meta" are captured.
+  const headlineLine =
+    postNameLines.find(l => isHeadlineLine(l) && looksLikeTitle(l)) ||
+    postNameLines.find(l => isHeadlineLine(l))
 
   let jobTitle = null
   let company  = null
@@ -209,15 +224,21 @@ export function parseLinkedInOCR(text) {
     const m = headlineLine.match(atPattern)
     if (m) {
       jobTitle = m[1].trim()
-      company  = m[2].trim().replace(/\s*[-–—·•.]+\s*$/, '')
+      company  = m[2].trim()
+        .replace(/,\s+[a-z].*$/, '')   // strip ", description text" but keep ", Inc." / ", LLC"
+        .replace(/\s*[-–—·•.]+\s*$/, '')
     }
   } else {
     const titleLine = postNameLines.find(l => looksLikeTitle(l) && l !== nameLine)
     if (titleLine) jobTitle = titleLine
     const titleIdx = titleLine ? postNameLines.indexOf(titleLine) : -1
     if (titleIdx >= 0) {
+      // Exclude multi-word title lines, but allow single-word company names ("Salesforce",
+      // "Google") that looksLikeTitle would falsely flag via keyword substrings.
+      const looksLikeTitleMultiWord = (l) =>
+        l.trim().split(/\s+/).length >= 2 && looksLikeTitle(l)
       const next = postNameLines.slice(titleIdx + 1).find(l =>
-        l.length < 80 && !looksLikeTitle(l) && !looksLikeLocation(l) &&
+        l.length < 80 && !looksLikeTitleMultiWord(l) && !looksLikeLocation(l) &&
         !l.includes('@') && !/^\d/.test(l) &&
         !UNIVERSITY_RE.test(l)
       )
