@@ -198,6 +198,19 @@ router.post('/', async (req, res, next) => {
     } = req.body
     if (!fullName?.trim()) return res.status(400).json({ error: 'Full name is required' })
 
+    // Duplicate check — email takes priority, fall back to exact name match
+    if (email?.trim()) {
+      const [dup] = await db.select({ id: contacts.id, fullName: contacts.fullName })
+        .from(contacts)
+        .where(and(ilike(contacts.email, email.trim()), eq(contacts.userId, req.userId), isNull(contacts.deletedAt)))
+      if (dup) return res.status(409).json({ error: `Already exists: ${dup.fullName}`, existingId: dup.id })
+    } else {
+      const [dup] = await db.select({ id: contacts.id })
+        .from(contacts)
+        .where(and(ilike(contacts.fullName, fullName.trim()), eq(contacts.userId, req.userId), isNull(contacts.deletedAt)))
+      if (dup) return res.status(409).json({ error: `A contact named "${fullName.trim()}" already exists`, existingId: dup.id })
+    }
+
     const freq = followUpFrequency || 30
     const nextFollowUp = computeNextFollowUp(lastContacted, freq)
 

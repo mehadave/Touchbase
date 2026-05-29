@@ -178,14 +178,12 @@ export default function Contacts() {
       <BulkScanModal
         open={showBulkScan}
         onClose={() => setShowBulkScan(false)}
-        onImported={(saved, failed) => {
+        onImported={(saved, failed, dupes) => {
           fetchContacts()
-          addToast(
-            failed > 0
-              ? `Imported ${saved} contact${saved !== 1 ? 's' : ''}, ${failed} failed`
-              : `Imported ${saved} contact${saved !== 1 ? 's' : ''} ✓`,
-            failed > 0 ? 'warning' : 'success'
-          )
+          const parts = [`${saved} imported`]
+          if (dupes  > 0) parts.push(`${dupes} already existed`)
+          if (failed > 0) parts.push(`${failed} failed`)
+          addToast(parts.join(' · '), failed > 0 ? 'warning' : 'success')
         }}
       />
     </div>

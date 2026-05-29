@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { X, ScanLine, CheckCircle2, AlertCircle, Loader2, ImagePlus, Trash2, Tag } from 'lucide-react'
+import { X, ScanLine, CheckCircle2, AlertCircle, Loader2, ImagePlus, Trash2, Tag, Copy } from 'lucide-react'
 import Button from '../ui/Button.jsx'
 import { parseLinkedInOCR } from '../../utils/ocrParse.js'
 import { findLinkedIn, createContact } from '../../api/contacts.js'
@@ -134,13 +134,28 @@ export default function BulkScanModal({ open, onClose, onImported }) {
     const images = Array.from(files).filter(f => f.type.startsWith('image/'))
     if (!images.length) return
 
-    const entries = images.map(f => ({
-      id:         Math.random().toString(36).slice(2),
-      file:       f,
-      previewUrl: URL.createObjectURL(f),
-      status:     'pending',
-      parsed:     null,
-      override:   {},
+    // Deduplicate by file fingerprint (name + size + lastModified)
+    const existingFingerprints = new Set(
+      contacts.map(c => c.fingerprint).filter(Boolean)
+    )
+    const seen = new Set()
+    const fresh = images.filter(f => {
+      const fp = `${f.name}-${f.size}-${f.lastModified}`
+      if (existingFingerprints.has(fp) || seen.has(fp)) return false
+      seen.add(fp)
+      return true
+    })
+    const skipped = images.length - fresh.length
+    if (skipped > 0 && fresh.length === 0) return  // all dupes, nothing to do
+
+    const entries = fresh.map(f => ({
+      id:          Math.random().toString(36).slice(2),
+      file:        f,
+      fingerprint: `${f.name}-${f.size}-${f.lastModified}`,
+      previewUrl:  URL.createObjectURL(f),
+      status:      'pending',
+      parsed:      null,
+      override:    {},
     }))
 
     // Push jobs onto the shared queue
@@ -179,15 +194,28 @@ export default function BulkScanModal({ open, onClose, onImported }) {
       c.id === id ? { ...c, override: { ...c.override, [key]: val } } : c
     ))
 
-  // Switch to review once everything has settled
+  // Switch to review once everything has settled; flag within-batch name dupes
   const allDone = contacts.length > 0 && contacts.every(c => c.status === 'done' || c.status === 'error')
   useEffect(() => {
-    if (allDone && phase === 'scan') setPhase('review')
+    if (!allDone || phase !== 'scan') return
+    // Mark contacts whose name already appears earlier in the batch
+    setContacts(prev => {
+      const seenNames = new Set()
+      return prev.map(c => {
+        if (c.status !== 'done') return c
+        const name = (c.override.fullName ?? c.parsed?.fullName ?? '').trim().toLowerCase()
+        if (name && seenNames.has(name)) return { ...c, batchDupe: true }
+        if (name) seenNames.add(name)
+        return { ...c, batchDupe: false }
+      })
+    })
+    setPhase('review')
   }, [allDone, phase])
 
-  const doneCount     = contacts.filter(c => c.status === 'done').length
-  const scanningCount = contacts.filter(c => c.status === 'scanning' || c.status === 'pending').length
-  const scannedSoFar  = contacts.filter(c => c.status === 'done' || c.status === 'error').length
+  const doneCount      = contacts.filter(c => c.status === 'done').length
+  const batchDupeCount = contacts.filter(c => c.batchDupe).length
+  const scanningCount  = contacts.filter(c => c.status === 'scanning' || c.status === 'pending').length
+  const scannedSoFar   = contacts.filter(c => c.status === 'done' || c.status === 'error').length
 
   // ── Import ─────────────────────────────────────────────────────────────────
   const handleImport = async () => {
@@ -227,16 +255,17 @@ export default function BulkScanModal({ open, onClose, onImported }) {
           try {
             await createContact(data)
             results[c.id] = 'ok'
-          } catch {
-            results[c.id] = 'error'
+          } catch (err) {
+            results[c.id] = err.status === 409 ? 'duplicate' : 'error'
           }
         })
     )
 
     setImportResults(results)
     const saved  = Object.values(results).filter(v => v === 'ok').length
+    const dupes  = Object.values(results).filter(v => v === 'duplicate').length
     const failed = Object.values(results).filter(v => v === 'error').length
-    onImported(saved, failed)
+    onImported(saved, failed, dupes)
     handleClose()
   }
 
@@ -358,7 +387,9 @@ export default function BulkScanModal({ open, onClose, onImported }) {
                     className={`rounded-xl border p-3 flex gap-3 transition ${
                       c.status === 'error'
                         ? 'border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20'
-                        : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800/50'
+                        : c.batchDupe
+                          ? 'border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-950/20'
+                          : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800/50'
                     }`}
                   >
                     {/* Thumbnail */}
@@ -411,8 +442,14 @@ export default function BulkScanModal({ open, onClose, onImported }) {
 
                     {/* Status icon + remove */}
                     <div className="shrink-0 flex flex-col items-center gap-1 pt-0.5">
-                      {importResults[c.id] === 'ok'    && <CheckCircle2 size={15} className="text-green-500" />}
-                      {importResults[c.id] === 'error' && <AlertCircle  size={15} className="text-red-500" />}
+                      {importResults[c.id] === 'ok'        && <CheckCircle2 size={15} className="text-green-500" />}
+                      {importResults[c.id] === 'duplicate' && <Copy         size={15} className="text-yellow-500" title="Already exists" />}
+                      {importResults[c.id] === 'error'     && <AlertCircle  size={15} className="text-red-500" />}
+                      {!importResults[c.id] && c.batchDupe && (
+                        <span title="Duplicate name in this batch">
+                          <Copy size={15} className="text-yellow-400" />
+                        </span>
+                      )}
                       {phase !== 'importing' && (
                         <button
                           onClick={() => removeContact(c.id)}
@@ -455,6 +492,9 @@ export default function BulkScanModal({ open, onClose, onImported }) {
           <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0">
             <p className="text-sm text-gray-400">
               {doneCount} contact{doneCount !== 1 ? 's' : ''} ready to import
+              {batchDupeCount > 0 && (
+                <span className="ml-2 text-yellow-500">· {batchDupeCount} possible duplicate{batchDupeCount !== 1 ? 's' : ''}</span>
+              )}
             </p>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={handleDiscard} disabled={phase === 'importing'}>
