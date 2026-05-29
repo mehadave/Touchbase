@@ -23,7 +23,12 @@ export function parseLinkedInOCR(text) {
       /^\d+\s*$/.test(l) ||
       l.length < 3 ||
       l.includes('linkedin.com/in/') ||
-      /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{4}/i.test(l)
+      /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{4}/i.test(l) ||
+      // LinkedIn notification / confirmation screens
+      /your\s+invitation/i.test(l) ||
+      /invitation\s+to\s+connect/i.test(l) ||
+      /\bwas\s+sent\b/i.test(l) ||
+      /\b(pending|withdraw|ignore|accept|decline)\b/i.test(l)
     )
   }
 
@@ -55,6 +60,12 @@ export function parseLinkedInOCR(text) {
     /,\s*([a-z]{2,3}|united states|united kingdom|canada|australia|india|germany|france)\s*$/i.test(l) ||
     /^(greater|san francisco|new york|los angeles|london|toronto|sydney|remote|chicago|seattle|boston|austin|denver|atlanta|miami|dallas|washington|philadelphia|phoenix|portland|berlin|paris|tokyo|singapore|amsterdam|dubai|mumbai|bangalore|hyderabad)/i.test(l)
 
+  // Known name particles that can appear lowercase (de, van, la, etc.)
+  const NAME_PARTICLES = new Set([
+    'de', 'van', 'la', 'le', 'di', 'du', 'da', 'der', 'den',
+    'von', 'el', 'al', 'bin', 'mac', 'mc', 'y', 'e', 'o', 'af',
+  ])
+
   const looksLikeName = (l) => {
     if (l.length < 3 || l.length > 50) return false
     if (/\d/.test(l)) return false
@@ -62,21 +73,24 @@ export function parseLinkedInOCR(text) {
     const words = l.split(/\s+/).filter(Boolean)
     if (words.length < 1 || words.length > 5) return false
     if (!/^[A-Z]/.test(words[0])) return false
-    const capCount = words.filter(w => /^[A-Z]/.test(w)).length
-    return capCount >= Math.ceil(words.length / 2)
+    // Every word must contain only letters, apostrophes, or hyphens — no parens, dots, symbols
+    if (!words.every(w => /^[A-Za-z''\-]+$/.test(w))) return false
+    // Any lowercase word must be a known name particle (de, van, la…)
+    // — rejects common English words like "to", "was", "connect", "sent"
+    const lowercaseWords = words.filter(w => /^[a-z]/.test(w))
+    if (lowercaseWords.some(w => !NAME_PARTICLES.has(w))) return false
+    return true
   }
 
   const linkedinMatch = text.match(/linkedin\.com\/in\/([\w-]+)/i)
   const emailMatch    = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)
   const phoneMatch    = text.match(/(\+\d[\d\s\-().]{8,15}|\(?\d{3}\)?[\s.\-]\d{3}[\s.\-]\d{4})/)
 
+  // Primary: strict looksLikeName; fallback: same strict check on first 5 lines
+  // (no loose fallback — too many false positives from notification screens)
   const nameLine =
     cleanLines.find(l => looksLikeName(l) && !looksLikeLocation(l)) ||
-    cleanLines.slice(0, 5).find(l =>
-      !looksLikeTitle(l) && !looksLikeLocation(l) &&
-      l.length < 50 && !/\d/.test(l) &&
-      !l.includes('@') && !l.includes('/')
-    )
+    cleanLines.slice(0, 5).find(l => looksLikeName(l) && !looksLikeLocation(l) && !looksLikeTitle(l))
 
   const atPattern = /^(.+?)\s+(?:at|@)\s+(.+?)(?:\s*[|·•\-].*)?$/i
   const headlineLine = cleanLines.find(l => atPattern.test(l) && looksLikeTitle(l))
