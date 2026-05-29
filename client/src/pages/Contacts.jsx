@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { Plus, Upload, SlidersHorizontal, Search, X, Users } from 'lucide-react'
+import { Plus, Upload, SlidersHorizontal, Search, X, Users, ScanLine } from 'lucide-react'
 import ContactCard from '../components/contacts/ContactCard.jsx'
 import ContactDetail from '../components/contacts/ContactDetail.jsx'
 import ContactForm from '../components/contacts/ContactForm.jsx'
 import CSVImportModal from '../components/contacts/CSVImportModal.jsx'
+import BulkScanModal from '../components/contacts/BulkScanModal.jsx'
 import Button from '../components/ui/Button.jsx'
 import Input, { Select } from '../components/ui/Input.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
@@ -19,6 +20,7 @@ export default function Contacts() {
   const [showDetail, setShowDetail]           = useState(false)
   const [showAdd, setShowAdd]                 = useState(false)
   const [showImport, setShowImport]           = useState(false)
+  const [showBulkScan, setShowBulkScan]       = useState(false)
   const [showFilters, setShowFilters]         = useState(false)
   const [addLoading, setAddLoading]           = useState(false)
   const [localSearch, setLocalSearch]         = useState(filters.search || '')
@@ -64,6 +66,9 @@ export default function Contacts() {
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
             <Upload size={14} /> Import CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowBulkScan(true)}>
+            <ScanLine size={14} /> Scan Screenshots
           </Button>
           <Button size="sm" onClick={() => setShowAdd(true)}>
             <Plus size={14} /> Add Contact
@@ -167,6 +172,21 @@ export default function Contacts() {
         open={showImport}
         onClose={() => setShowImport(false)}
         onImported={() => fetchContacts()}
+      />
+
+      {/* Bulk scan modal */}
+      <BulkScanModal
+        open={showBulkScan}
+        onClose={() => setShowBulkScan(false)}
+        onImported={(saved, failed) => {
+          fetchContacts()
+          addToast(
+            failed > 0
+              ? `Imported ${saved} contact${saved !== 1 ? 's' : ''}, ${failed} failed`
+              : `Imported ${saved} contact${saved !== 1 ? 's' : ''} ✓`,
+            failed > 0 ? 'warning' : 'success'
+          )
+        }}
       />
     </div>
   )

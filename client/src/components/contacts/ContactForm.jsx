@@ -5,6 +5,7 @@ import TagInput from './TagInput.jsx'
 import { format } from 'date-fns'
 import { Camera, Loader2 as Spinner, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import { findLinkedIn } from '../../api/contacts.js'
+import { parseLinkedInOCR } from '../../utils/ocrParse.js'
 
 const CATEGORIES = ['Personal', 'Professional', 'Social']
 
@@ -67,128 +68,21 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
       const { data: { text } } = await worker.recognize(file)
       await worker.terminate()
 
-      const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
-      const UI_NOISE = new Set([
-        'linkedin', 'home', 'my network', 'jobs', 'messaging', 'notifications',
-        'me', 'work', 'search', 'connect', 'follow', 'message', 'more',
-        'connections', 'followers', 'following', 'contact info', 'about',
-        'experience', 'education', 'skills', 'recommendations', 'activity',
-        'see all', 'show more', 'show less', 'view profile', 'open to',
-        'add section', 'premium', 'try premium', '·', '•',
-      ])
-      const isNoise = (l) => {
-        const lower = l.toLowerCase()
-        return (
-          UI_NOISE.has(lower) ||
-          /^[\d,+]+\s*(connection|follower|view|like|comment)/i.test(l) ||
-          /^\d+\s*$/.test(l) ||
-          l.length < 3 ||
-          l.includes('linkedin.com/in/') ||
-          /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{4}/i.test(l)
-        )
-      }
-      // Strip LinkedIn degree indicators AND trailing badge symbols (✓ OCR'd as @, ©, etc.)
-      const cleanLines = lines
-        .map(l => l
-          .replace(/\s*[·•]\s*(1st|2nd|3rd|[0-9]+th)\s*$/i, '')  // "· 1st" etc.
-          .replace(/\s+[@©®™✓✔☑]\s*$/, '')                         // verification badge artifacts
-          .trim()
-        )
-        .filter(l => l.length > 0 && !isNoise(l))
-
-      const TITLE_KEYWORDS = [
-        'director', 'manager', 'engineer', 'developer', 'designer',
-        'founder', 'ceo', 'cto', 'coo', 'cfo', 'cmo', 'cpo',
-        'vp', 'vice president', 'president', 'head of', 'lead', 'leads',
-        'senior', 'principal', 'staff', 'architect', 'analyst', 'associate',
-        'consultant', 'officer', 'partner', 'attorney', 'lawyer', 'counsel',
-        'scientist', 'researcher', 'professor', 'lecturer', 'teacher',
-        'product', 'marketing', 'sales', 'operations', 'finance', 'legal',
-        'coordinator', 'specialist', 'strategist', 'advisor', 'executive',
-        'intern', 'apprentice', 'trainee', 'fellow', 'contractor', 'freelance',
-      ]
-      const looksLikeTitle = (l) =>
-        TITLE_KEYWORDS.some(k => l.toLowerCase().includes(k)) && l.length < 120
-
-      const looksLikeLocation = (l) =>
-        /\b(area|metropolitan|county|district|province|region)\b/i.test(l) ||
-        /,\s*([a-z]{2,3}|united states|united kingdom|canada|australia|india|germany|france)\s*$/i.test(l) ||
-        /^(greater|san francisco|new york|los angeles|london|toronto|sydney|remote|chicago|seattle|boston|austin|denver|atlanta|miami|dallas|washington|philadelphia|phoenix|portland|berlin|paris|tokyo|singapore|amsterdam|dubai|mumbai|bangalore|hyderabad)/i.test(l)
-
-      const looksLikeName = (l) => {
-        if (l.length < 3 || l.length > 50) return false
-        if (/\d/.test(l)) return false
-        if (l.includes('@') || l.includes('http') || l.includes('/') || l.includes('|')) return false
-        const words = l.split(/\s+/).filter(Boolean)
-        if (words.length < 1 || words.length > 5) return false
-        // First word must be capitalized; allow lowercase particles (de, van, la, etc.)
-        if (!/^[A-Z]/.test(words[0])) return false
-        // At least half the words should be capitalized
-        const capCount = words.filter(w => /^[A-Z]/.test(w)).length
-        return capCount >= Math.ceil(words.length / 2)
-      }
-
-      const linkedinMatch = text.match(/linkedin\.com\/in\/([\w-]+)/i)
-      if (linkedinMatch && !form.linkedinUrl) set('linkedinUrl', 'https://linkedin.com/in/' + linkedinMatch[1])
-      const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)
-      if (emailMatch && !form.email) set('email', emailMatch[0])
-      const phoneMatch = text.match(/(\+\d[\d\s\-().]{8,15}|\(?\d{3}\)?[\s.\-]\d{3}[\s.\-]\d{4})/)
-      if (phoneMatch && !form.phone) set('phone', phoneMatch[0].trim())
-
-      // Name: must not be a location; cross-check both functions
-      const nameLine =
-        cleanLines.find(l => looksLikeName(l) && !looksLikeLocation(l)) ||
-        cleanLines.slice(0, 5).find(l =>
-          !looksLikeTitle(l) && !looksLikeLocation(l) &&
-          l.length < 50 && !/\d/.test(l) &&
-          !l.includes('@') && !l.includes('/')
-        )
-      if (nameLine && !form.fullName) set('fullName', nameLine)
-
-      // Headline: "Title at Company" or "Title @ Company" with optional trailing noise
-      const atPattern = /^(.+?)\s+(?:at|@)\s+(.+?)(?:\s*[|·•\-].*)?$/i
-      const headlineLine = cleanLines.find(l => atPattern.test(l) && looksLikeTitle(l))
-      if (headlineLine) {
-        const m = headlineLine.match(atPattern)
-        if (m) {
-          if (!form.jobTitle) set('jobTitle', m[1].trim())
-          // Strip trailing OCR artifacts (dashes, dots) from company
-          if (!form.company) set('company', m[2].trim().replace(/\s*[-–—·•]+\s*$/, ''))
-        }
-      } else {
-        const titleLine = cleanLines.find(l => looksLikeTitle(l) && l !== nameLine)
-        if (titleLine && !form.jobTitle) set('jobTitle', titleLine)
-        const titleIdx = titleLine ? cleanLines.indexOf(titleLine) : -1
-        if (titleIdx >= 0) {
-          const next = cleanLines.slice(titleIdx + 1).find(l =>
-            l.length < 80 && !looksLikeTitle(l) && !looksLikeLocation(l) &&
-            !l.includes('@') && !/^\d/.test(l)
-          )
-          // Take only the first segment in case OCR merged two items with "-" or "·"
-          if (next && !form.company) {
-            set('company', next.split(/\s*[-–—·•]\s*/)[0].trim())
-          }
-        }
-      }
-
-      // About section → notes
-      const aboutMatch = text.match(/\bAbout\b[\s\n]+([\s\S]+?)(?=\n\s*(?:Activity|Experience|Education|Skills|Recommendations|Posts|Comments|Images|\d[\d,]*\s*follower))/i)
-      if (aboutMatch && !form.notes) {
-        const aboutText = aboutMatch[1].trim().replace(/\.{3}see more\s*$/i, '').trim()
-        if (aboutText) set('notes', aboutText)
-      }
-
+      const parsed = parseLinkedInOCR(text)
+      if (parsed.fullName    && !form.fullName)    set('fullName',    parsed.fullName)
+      if (parsed.jobTitle    && !form.jobTitle)    set('jobTitle',    parsed.jobTitle)
+      if (parsed.company     && !form.company)     set('company',     parsed.company)
+      if (parsed.email       && !form.email)       set('email',       parsed.email)
+      if (parsed.phone       && !form.phone)       set('phone',       parsed.phone)
+      if (parsed.linkedinUrl && !form.linkedinUrl) set('linkedinUrl', parsed.linkedinUrl)
+      if (parsed.notes       && !form.notes)       set('notes',       parsed.notes)
       set('source', 'linkedin')
 
-      // Auto-find LinkedIn profile URL if not already in the screenshot
-      if (!linkedinMatch && nameLine) {
+      // Auto-find LinkedIn profile URL if not in the screenshot
+      if (!parsed.linkedinFound && parsed.fullName) {
         setOcrStatus('Finding LinkedIn profile…')
         try {
-          const extractedName    = nameLine
-          const extractedCompany = headlineLine
-            ? headlineLine.match(atPattern)?.[2]?.trim().replace(/\s*[-–—·•]+\s*$/, '') ?? ''
-            : ''
-          const result = await findLinkedIn(extractedName, extractedCompany)
+          const result = await findLinkedIn(parsed.fullName, parsed.company)
           if (result?.url) {
             set('linkedinUrl', result.url)
             setOcrStatus('LinkedIn profile found ✓')
