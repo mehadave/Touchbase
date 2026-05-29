@@ -54,6 +54,34 @@ async function upsertTags(contactId, tagNames) {
   }
 }
 
+// GET /api/contacts/find-linkedin?name=...&company=...
+router.get('/find-linkedin', async (req, res, next) => {
+  try {
+    const { name, company } = req.query
+    if (!name?.trim()) return res.status(400).json({ error: 'name is required' })
+
+    const terms = [name.trim(), company?.trim()].filter(Boolean)
+    const q = encodeURIComponent(`site:linkedin.com/in ${terms.map(t => `"${t}"`).join(' ')}`)
+
+    const response = await fetch(`https://html.duckduckgo.com/html/?q=${q}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      signal: AbortSignal.timeout(8000),
+    })
+
+    const html = await response.text()
+    // Extract the first clean linkedin.com/in/username from result links
+    const match = html.match(/linkedin\.com\/in\/([\w-]{3,60})(?=[^/\w-]|$)/i)
+    if (match) {
+      return res.json({ url: `https://www.linkedin.com/in/${match[1]}` })
+    }
+    res.json({ url: null })
+  } catch (err) { next(err) }
+})
+
 // GET /api/contacts
 router.get('/', async (req, res, next) => {
   try {

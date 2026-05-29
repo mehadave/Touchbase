@@ -7,6 +7,7 @@ export const updateContact  = (id, d)  => api.put(`/contacts/${id}`, d)
 export const deleteContact  = (id)     => api.delete(`/contacts/${id}`)
 export const importContacts = (data)   => api.post('/contacts/import', data)
 export const getAllTags      = ()       => api.get('/contacts/tags/all')
+export const findLinkedIn   = (name, company) => api.get('/contacts/find-linkedin', { name, company })
 export const uploadPhoto    = (id, file) => {
   const form = new FormData()
   form.append('photo', file)

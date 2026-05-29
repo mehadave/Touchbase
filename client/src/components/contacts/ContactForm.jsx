@@ -4,6 +4,7 @@ import StarRating from '../ui/StarRating.jsx'
 import TagInput from './TagInput.jsx'
 import { format } from 'date-fns'
 import { Camera, Loader2 as Spinner, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { findLinkedIn } from '../../api/contacts.js'
 
 const CATEGORIES = ['Personal', 'Professional', 'Social']
 
@@ -36,6 +37,7 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
   const [errors, setErrors] = useState({})
   const [ocrLoading, setOcrLoading] = useState(false)
   const [ocrError, setOcrError] = useState('')
+  const [ocrStatus, setOcrStatus] = useState('')
   const fileInputRef = useRef(null)
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }))
@@ -58,6 +60,7 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
     if (!file) return
     setOcrLoading(true)
     setOcrError('')
+    setOcrStatus('')
     try {
       const { createWorker } = await import('tesseract.js')
       const worker = await createWorker('eng')
@@ -176,6 +179,26 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
       }
 
       set('source', 'linkedin')
+
+      // Auto-find LinkedIn profile URL if not already in the screenshot
+      if (!linkedinMatch && nameLine) {
+        setOcrStatus('Finding LinkedIn profile…')
+        try {
+          const extractedName    = nameLine
+          const extractedCompany = headlineLine
+            ? headlineLine.match(atPattern)?.[2]?.trim().replace(/\s*[-–—·•]+\s*$/, '') ?? ''
+            : ''
+          const result = await findLinkedIn(extractedName, extractedCompany)
+          if (result?.url) {
+            set('linkedinUrl', result.url)
+            setOcrStatus('LinkedIn profile found ✓')
+          } else {
+            setOcrStatus('LinkedIn profile not found — paste URL manually')
+          }
+        } catch {
+          setOcrStatus('Could not search LinkedIn — paste URL manually')
+        }
+      }
     } catch (err) {
       console.error('OCR error:', err)
       setOcrError('Could not read the image. Try a clearer screenshot.')
@@ -273,7 +296,7 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800 transition disabled:opacity-50"
           >
             {ocrLoading ? <Spinner size={12} className="animate-spin" /> : <Camera size={12} />}
-            {ocrLoading ? 'Scanning…' : 'Scan LinkedIn'}
+            {ocrLoading ? (ocrStatus ? 'Finding profile…' : 'Scanning…') : 'Scan LinkedIn'}
           </button>
         </div>
       </div>
@@ -283,6 +306,11 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
         <div className="h-0.5 bg-blue-100 dark:bg-blue-900 rounded-full overflow-hidden -mt-3">
           <div className="h-full bg-blue-500 rounded-full animate-pulse w-3/4" />
         </div>
+      )}
+      {!ocrLoading && ocrStatus && !ocrError && (
+        <p className={`flex items-center gap-1 text-xs -mt-3 ${ocrStatus.includes('✓') ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
+          {ocrStatus}
+        </p>
       )}
       {ocrError && (
         <p className="flex items-center gap-1 text-xs text-red-500 -mt-3">
