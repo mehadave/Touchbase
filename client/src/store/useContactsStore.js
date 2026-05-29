@@ -57,6 +57,6 @@ export const useContactsStore = create((set, get) => ({
   deleteContact: async (id) => {
     await contactsApi.deleteContact(id)
     set(s => ({ contacts: s.contacts.filter(c => c.id !== id) }))
-    useUIStore.getState().addToast('Contact deleted')
+    // Toast is shown by the calling component (which has the contact name)
   },
 }))

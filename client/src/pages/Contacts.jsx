@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { Plus, Upload, SlidersHorizontal, Search, X, Users, ScanLine } from 'lucide-react'
+import { Plus, Upload, SlidersHorizontal, Search, X, Users, ScanLine, CheckSquare, Trash2, Square } from 'lucide-react'
 import ContactCard from '../components/contacts/ContactCard.jsx'
 import ContactDetail from '../components/contacts/ContactDetail.jsx'
 import ContactForm from '../components/contacts/ContactForm.jsx'
@@ -12,9 +12,10 @@ import { useContactsStore } from '../store/useContactsStore.js'
 import { useUIStore } from '../store/useUIStore.js'
 import { useDebounce } from '../hooks/useDebounce.js'
 import Modal from '../components/ui/Modal.jsx'
+import { listConferences } from '../api/conferences.js'
 
 export default function Contacts() {
-  const { contacts, filters, sortBy, setFilter, setSortBy, fetchContacts, createContact } = useContactsStore()
+  const { contacts, filters, sortBy, setFilter, setSortBy, fetchContacts, createContact, deleteContact } = useContactsStore()
   const { addToast } = useUIStore()
   const [selectedContact, setSelectedContact] = useState(null)
   const [showDetail, setShowDetail]           = useState(false)
@@ -24,23 +25,35 @@ export default function Contacts() {
   const [showFilters, setShowFilters]         = useState(false)
   const [addLoading, setAddLoading]           = useState(false)
   const [localSearch, setLocalSearch]         = useState(filters.search || '')
+  const [conferences, setConferences]         = useState([])
+  // Selection mode
+  const [selecting, setSelecting]             = useState(false)
+  const [selectedIds, setSelectedIds]         = useState(new Set())
+  const [deleting, setDeleting]               = useState(false)
   const debouncedSearch = useDebounce(localSearch, 300)
   const mountedRef = useRef(false)
 
-  // Sync debounced search into the store filter (skip initial mount —
-  // the filters effect below handles the first fetch)
+  useEffect(() => {
+    listConferences().then(setConferences).catch(() => {})
+  }, [])
+
   useEffect(() => {
     if (!mountedRef.current) return
     setFilter('search', debouncedSearch)
   }, [debouncedSearch])
 
-  // Single place that drives all fetches
   useEffect(() => {
     mountedRef.current = true
     fetchContacts()
   }, [filters, sortBy])
 
-  const openContact = (c) => { setSelectedContact(c); setShowDetail(true) }
+  const openContact = (c) => {
+    if (selecting) {
+      toggleSelect(c.id)
+    } else {
+      setSelectedContact(c); setShowDetail(true)
+    }
+  }
 
   const handleCreate = async (data) => {
     setAddLoading(true)
@@ -52,33 +65,88 @@ export default function Contacts() {
     }
   }
 
-  const activeFilterCount = [filters.category, filters.tag, filters.strength, filters.overdue]
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === contacts.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(contacts.map(c => c.id)))
+    }
+  }
+
+  const exitSelecting = () => { setSelecting(false); setSelectedIds(new Set()) }
+
+  const handleBulkDelete = async () => {
+    if (!selectedIds.size) return
+    if (!confirm(`Delete ${selectedIds.size} contact${selectedIds.size !== 1 ? 's' : ''}? This cannot be undone.`)) return
+    setDeleting(true)
+    let done = 0
+    for (const id of selectedIds) {
+      try { await deleteContact(id); done++ } catch { /* skip */ }
+    }
+    addToast(`${done} contact${done !== 1 ? 's' : ''} deleted`)
+    exitSelecting()
+    setDeleting(false)
+  }
+
+  const activeFilterCount = [filters.category, filters.tag, filters.strength, filters.overdue, filters.conference_id]
     .filter(Boolean).length
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Contacts</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{contacts.length} people</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
-            <Upload size={14} /> Import CSV
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setShowBulkScan(true)}>
-            <ScanLine size={14} /> Scan Screenshots
-          </Button>
-          <Button size="sm" onClick={() => setShowAdd(true)}>
-            <Plus size={14} /> Add Contact
-          </Button>
-        </div>
+        {!selecting ? (
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+              <Upload size={14} /> Import CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowBulkScan(true)}>
+              <ScanLine size={14} /> Scan
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => { setSelecting(true) }}>
+              <CheckSquare size={14} /> Select
+            </Button>
+            <Button size="sm" onClick={() => setShowAdd(true)}>
+              <Plus size={14} /> Add
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500 dark:text-gray-400">{selectedIds.size} selected</span>
+            <Button variant="outline" size="sm" onClick={toggleSelectAll}>
+              {selectedIds.size === contacts.length ? <CheckSquare size={14} /> : <Square size={14} />}
+              {selectedIds.size === contacts.length ? 'Deselect all' : 'Select all'}
+            </Button>
+            {selectedIds.size > 0 && (
+              <Button
+                size="sm"
+                className="bg-red-500 hover:bg-red-600 text-white border-red-500"
+                onClick={handleBulkDelete}
+                loading={deleting}
+              >
+                <Trash2 size={14} /> Delete {selectedIds.size}
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={exitSelecting}>Cancel</Button>
+          </div>
+        )}
       </div>
 
       {/* Search & filters bar */}
       <div className="flex gap-2 flex-wrap">
-        <div className="flex-1 min-w-56 relative">
+        <div className="flex-1 min-w-48 relative">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             value={localSearch}
@@ -93,7 +161,7 @@ export default function Contacts() {
           )}
         </div>
 
-        <Select value={sortBy} onChange={e => setSortBy(e.target.value)} className="w-44">
+        <Select value={sortBy} onChange={e => setSortBy(e.target.value)} className="w-40">
           <option value="name">Name (A–Z)</option>
           <option value="last_contacted">Last contacted</option>
           <option value="next_follow_up">Next follow-up</option>
@@ -114,12 +182,16 @@ export default function Contacts() {
 
       {/* Filter panel */}
       {showFilters && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 grid grid-cols-2 md:grid-cols-3 gap-3">
           <Select label="Category" value={filters.category} onChange={e => setFilter('category', e.target.value)}>
             <option value="">All categories</option>
             <option>Personal</option>
             <option>Professional</option>
             <option>Social</option>
+          </Select>
+          <Select label="Conference" value={filters.conference_id} onChange={e => setFilter('conference_id', e.target.value)}>
+            <option value="">All conferences</option>
+            {conferences.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </Select>
           <Select label="Strength" value={filters.strength} onChange={e => setFilter('strength', e.target.value)}>
             <option value="">Any strength</option>
@@ -133,9 +205,11 @@ export default function Contacts() {
               Show overdue only
             </label>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => { useContactsStore.getState().clearFilters(); setLocalSearch('') }}>
-            Clear all filters
-          </Button>
+          <div className="flex flex-col justify-end">
+            <Button variant="ghost" size="sm" onClick={() => { useContactsStore.getState().clearFilters(); setLocalSearch('') }}>
+              Clear all filters
+            </Button>
+          </div>
         </div>
       )}
 
@@ -148,9 +222,24 @@ export default function Contacts() {
           action={<Button onClick={() => setShowAdd(true)}><Plus size={14} /> Add your first contact</Button>}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {contacts.map(c => (
-            <ContactCard key={c.id} contact={c} onClick={() => openContact(c)} />
+            <div key={c.id} className="relative">
+              {selecting && (
+                <button
+                  onClick={() => toggleSelect(c.id)}
+                  className="absolute top-3 left-3 z-10"
+                >
+                  {selectedIds.has(c.id)
+                    ? <CheckSquare size={18} className="text-amber-500 drop-shadow-sm" />
+                    : <Square size={18} className="text-gray-300 drop-shadow-sm" />
+                  }
+                </button>
+              )}
+              <div className={selecting && selectedIds.has(c.id) ? 'ring-2 ring-amber-400 rounded-2xl' : ''}>
+                <ContactCard contact={c} onClick={() => openContact(c)} />
+              </div>
+            </div>
           ))}
         </div>
       )}

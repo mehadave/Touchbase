@@ -79,12 +79,12 @@ function ProfessionalNetwork() {
 
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Conferences section */}
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <MapPin size={18} className="text-violet-500" /> Conferences
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <MapPin size={16} className="text-violet-500" /> Conferences
           </h2>
           <Button size="sm" onClick={() => setShowAddConf(true)}>
             <Plus size={14} /> Add Conference
@@ -96,24 +96,24 @@ function ProfessionalNetwork() {
             description="Track the conferences you attend and the people you meet there."
             action={<Button size="sm" onClick={() => setShowAddConf(true)}><Plus size={14} /> Add Conference</Button>} />
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {conferences.map(conf => (
               <div key={conf.id}
                 onClick={() => { setSelectedConf(conf.id); setShowConfDetail(true) }}
-                className="cursor-pointer bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-md transition-all">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-gray-900 dark:text-white text-sm">{conf.name}</h3>
-                  <span className="text-xs text-violet-500 bg-violet-50 dark:bg-violet-900/20 px-2 py-0.5 rounded-full">conf</span>
+                className="cursor-pointer bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-md transition-all">
+                <div className="flex items-start justify-between mb-1.5 gap-1">
+                  <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight">{conf.name}</h3>
+                  <span className="text-xs text-violet-500 bg-violet-50 dark:bg-violet-900/20 px-1.5 py-0.5 rounded-full shrink-0">conf</span>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   {conf.date && (
-                    <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                      <Calendar size={11} /> {format(new Date(conf.date + 'T12:00:00'), 'MMM d, yyyy')}
+                    <div className="flex items-center gap-1 text-xs text-gray-500 truncate">
+                      <Calendar size={10} className="shrink-0" /> {format(new Date(conf.date + 'T12:00:00'), 'MMM d, yyyy')}
                     </div>
                   )}
                   {conf.location && (
-                    <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                      <MapPin size={11} /> {conf.location}
+                    <div className="flex items-center gap-1 text-xs text-gray-500 truncate">
+                      <MapPin size={10} className="shrink-0" /> {conf.location}
                     </div>
                   )}
                 </div>
@@ -124,30 +124,29 @@ function ProfessionalNetwork() {
       </section>
 
       {/* LinkedIn connections */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-          <Users size={18} className="text-sky-500" /> LinkedIn Connections
-        </h2>
-        {contacts.filter(c => c.source === 'linkedin' || c.linkedinUrl).length === 0 ? (
-          <EmptyState icon={<Briefcase size={24} className="text-gray-400" />} title="No LinkedIn contacts"
-            description="Add contacts with a LinkedIn URL or 'LinkedIn' source to see them here." />
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {contacts.filter(c => c.source === 'linkedin' || c.linkedinUrl).length > 0 && (
+        <section>
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
+            <Users size={16} className="text-sky-500" /> LinkedIn Connections
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {contacts.filter(c => c.source === 'linkedin' || c.linkedinUrl).map(c => (
               <ContactCard key={c.id} contact={c}
                 onClick={() => { setSelectedContact(c); setShowContactDetail(true) }} />
             ))}
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
       {/* All professional contacts */}
       <section>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">All Professional Contacts</h2>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
+          All Professional Contacts
+        </h2>
         {contacts.length === 0 ? (
           <EmptyState icon={<Briefcase size={24} className="text-gray-400" />} title="No professional contacts yet" />
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {contacts.map(c => (
               <ContactCard key={c.id} contact={c}
                 onClick={() => { setSelectedContact(c); setShowContactDetail(true) }} />
@@ -168,17 +167,17 @@ function ProfessionalNetwork() {
 
 export default function Network() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Network</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Browse your connections by relationship type</p>
       </div>
 
-      {/* Sub-tabs */}
-      <nav className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
-        <NavLink to="/network/personal"      className={subNavClass}>Personal</NavLink>
-        <NavLink to="/network/professional"  className={subNavClass}>Professional</NavLink>
-        <NavLink to="/network/social"        className={subNavClass}>Social</NavLink>
+      {/* Sub-tabs — full width on mobile so tabs don't clip */}
+      <nav className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-full sm:w-fit">
+        <NavLink to="/network/personal"      className={subNavClass + ' flex-1 sm:flex-none text-center'}>Personal</NavLink>
+        <NavLink to="/network/professional"  className={subNavClass + ' flex-1 sm:flex-none text-center'}>Professional</NavLink>
+        <NavLink to="/network/social"        className={subNavClass + ' flex-1 sm:flex-none text-center'}>Social</NavLink>
       </nav>
 
       <Routes>
