@@ -3,9 +3,14 @@ import Button from '../ui/Button.jsx'
 import StarRating from '../ui/StarRating.jsx'
 import TagInput from './TagInput.jsx'
 import { format } from 'date-fns'
-import { Camera, Loader2 as Spinner, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Camera, Loader2 as Spinner, AlertCircle, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
 import { findLinkedIn } from '../../api/contacts.js'
 import { parseLinkedInOCR } from '../../utils/ocrParse.js'
+
+function linkedInSearchUrl(name, company) {
+  const kw = [name, company].filter(Boolean).join(' ')
+  return `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(kw)}`
+}
 
 const CATEGORIES = ['Personal', 'Professional', 'Social']
 
@@ -87,10 +92,10 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
             set('linkedinUrl', result.url)
             setOcrStatus('LinkedIn profile found ✓')
           } else {
-            setOcrStatus('LinkedIn profile not found — paste URL manually')
+            setOcrStatus('not_found')
           }
         } catch {
-          setOcrStatus('Could not search LinkedIn — paste URL manually')
+          setOcrStatus('not_found')
         }
       }
     } catch (err) {
@@ -202,9 +207,23 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
         </div>
       )}
       {!ocrLoading && ocrStatus && !ocrError && (
-        <p className={`flex items-center gap-1 text-xs -mt-3 ${ocrStatus.includes('✓') ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
-          {ocrStatus}
-        </p>
+        ocrStatus === 'not_found' ? (
+          <p className="flex items-center gap-1.5 text-xs -mt-3 text-gray-400 dark:text-gray-500">
+            Profile URL not found —
+            <a
+              href={linkedInSearchUrl(form.fullName, form.company)}
+              target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-0.5 text-blue-500 hover:text-blue-600 underline"
+            >
+              search LinkedIn <ExternalLink size={10} />
+            </a>
+            and paste the URL below
+          </p>
+        ) : (
+          <p className={`flex items-center gap-1 text-xs -mt-3 ${ocrStatus.includes('✓') ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
+            {ocrStatus}
+          </p>
+        )
       )}
       {ocrError && (
         <p className="flex items-center gap-1 text-xs text-red-500 -mt-3">
@@ -262,12 +281,24 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
           </div>
 
           {/* LinkedIn URL */}
-          <input
-            value={form.linkedinUrl}
-            onChange={e => set('linkedinUrl', e.target.value)}
-            placeholder="LinkedIn URL"
-            className={field}
-          />
+          <div className="flex gap-2 items-center">
+            <input
+              value={form.linkedinUrl}
+              onChange={e => set('linkedinUrl', e.target.value)}
+              placeholder="LinkedIn URL"
+              className={`${field} flex-1`}
+            />
+            {!form.linkedinUrl && form.fullName && (
+              <a
+                href={linkedInSearchUrl(form.fullName, form.company)}
+                target="_blank" rel="noreferrer"
+                title="Search LinkedIn"
+                className="shrink-0 flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs text-blue-500 hover:text-blue-600 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition"
+              >
+                <ExternalLink size={12} /> Find
+              </a>
+            )}
+          </div>
 
           {/* Tags */}
           <div>

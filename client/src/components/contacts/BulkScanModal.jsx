@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { X, ScanLine, CheckCircle2, AlertCircle, Loader2, ImagePlus, Trash2, Tag, Copy } from 'lucide-react'
+import { X, ScanLine, CheckCircle2, AlertCircle, Loader2, ImagePlus, Trash2, Tag, Copy, ExternalLink } from 'lucide-react'
 import Button from '../ui/Button.jsx'
 import { parseLinkedInOCR } from '../../utils/ocrParse.js'
 import { findLinkedIn, createContact } from '../../api/contacts.js'
@@ -430,12 +430,24 @@ export default function BulkScanModal({ open, onClose, onImported }) {
                             placeholder="Job title"
                             className={`${field} text-xs py-1`}
                           />
-                          <input
-                            value={c.override.linkedinUrl ?? c.parsed.linkedinUrl}
-                            onChange={e => setOverride(c.id, 'linkedinUrl', e.target.value)}
-                            placeholder="LinkedIn URL"
-                            className={`${field} text-xs py-1`}
-                          />
+                          <div className="flex gap-1 items-center col-span-1">
+                            <input
+                              value={c.override.linkedinUrl ?? c.parsed.linkedinUrl}
+                              onChange={e => setOverride(c.id, 'linkedinUrl', e.target.value)}
+                              placeholder="LinkedIn URL"
+                              className={`${field} text-xs py-1 flex-1 min-w-0`}
+                            />
+                            {!(c.override.linkedinUrl ?? c.parsed.linkedinUrl) && (c.override.fullName ?? c.parsed.fullName) && (
+                              <a
+                                href={`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent([c.override.fullName ?? c.parsed.fullName, c.override.company ?? c.parsed.company].filter(Boolean).join(' '))}`}
+                                target="_blank" rel="noreferrer"
+                                title="Find on LinkedIn"
+                                className="shrink-0 text-blue-400 hover:text-blue-600"
+                              >
+                                <ExternalLink size={12} />
+                              </a>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>

@@ -55,29 +55,41 @@ async function upsertTags(contactId, tagNames) {
 }
 
 // GET /api/contacts/find-linkedin?name=...&company=...
+// Uses Brave Search API (free tier: 2000 req/month). Set BRAVE_SEARCH_API_KEY in env.
 router.get('/find-linkedin', async (req, res, next) => {
   try {
     const { name, company } = req.query
     if (!name?.trim()) return res.status(400).json({ error: 'name is required' })
 
+    const apiKey = process.env.BRAVE_SEARCH_API_KEY
+    if (!apiKey) return res.json({ url: null })
+
     const terms = [name.trim(), company?.trim()].filter(Boolean)
     const q = encodeURIComponent(`site:linkedin.com/in ${terms.map(t => `"${t}"`).join(' ')}`)
 
-    const response = await fetch(`https://html.duckduckgo.com/html/?q=${q}`, {
+    const response = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${q}&count=5`, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept': 'application/json',
+        'Accept-Encoding': 'gzip',
+        'X-Subscription-Token': apiKey,
       },
       signal: AbortSignal.timeout(8000),
     })
 
-    const html = await response.text()
-    // Extract the first clean linkedin.com/in/username from result links
-    const match = html.match(/linkedin\.com\/in\/([\w-]{3,60})(?=[^/\w-]|$)/i)
-    if (match) {
-      return res.json({ url: `https://www.linkedin.com/in/${match[1]}` })
+    if (!response.ok) return res.json({ url: null })
+
+    const data = await response.json()
+    const results = data?.web?.results ?? []
+
+    for (const r of results) {
+      // Check the result URL directly
+      const urlMatch = (r.url || '').match(/linkedin\.com\/in\/([\w-]{3,60})/i)
+      if (urlMatch) return res.json({ url: `https://www.linkedin.com/in/${urlMatch[1]}` })
+      // Also check the snippet/title for a LinkedIn URL
+      const textMatch = `${r.title || ''} ${r.description || ''}`.match(/linkedin\.com\/in\/([\w-]{3,60})/i)
+      if (textMatch) return res.json({ url: `https://www.linkedin.com/in/${textMatch[1]}` })
     }
+
     res.json({ url: null })
   } catch (err) { next(err) }
 })
