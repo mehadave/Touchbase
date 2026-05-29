@@ -37,6 +37,7 @@ export const contacts = pgTable('contacts', {
   jobTitle:             text('job_title'),
   category:             categoryEnum('category').notNull().default('Personal'),
   linkedinUrl:          text('linkedin_url'),
+  university:           text('university'),
   notes:                text('notes'),
   relationshipStrength: integer('relationship_strength').notNull().default(3),
   lastContacted:        timestamp('last_contacted', { withTimezone: true }),

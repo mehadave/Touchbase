@@ -34,7 +34,9 @@ export function parseLinkedInOCR(text) {
 
   const cleanLines = lines
     .map(l => l
-      .replace(/\s*[·•]\s*(1st|2nd|3rd|[0-9]+th)\s*$/i, '')
+      // Strip LinkedIn connection degree badge: "• 2nd", "© 2m", "® 3rd", etc.
+      // (OCR often misreads • as © or ®, and "2nd" as "2m")
+      .replace(/\s*[·•©®°]\s*\d+\w*\s*$/i, '')
       .replace(/\s+[@©®™✓✔☑]\s*$/, '')
       .trim()
     )
@@ -52,13 +54,20 @@ export function parseLinkedInOCR(text) {
     'intern', 'apprentice', 'trainee', 'fellow', 'contractor', 'freelance',
   ]
 
+  const UNIVERSITY_KEYWORDS = [
+    'university', 'college', 'institute', 'school', 'polytechnic',
+    'academy', 'iit', 'iim', 'mit', 'caltech', 'seminary',
+  ]
+
   const looksLikeTitle = (l) =>
     TITLE_KEYWORDS.some(k => l.toLowerCase().includes(k)) && l.length < 120
 
   const looksLikeLocation = (l) =>
     /\b(area|metropolitan|county|district|province|region)\b/i.test(l) ||
     /,\s*([a-z]{2,3}|united states|united kingdom|canada|australia|india|germany|france)\s*$/i.test(l) ||
-    /^(greater|san francisco|new york|los angeles|london|toronto|sydney|remote|chicago|seattle|boston|austin|denver|atlanta|miami|dallas|washington|philadelphia|phoenix|portland|berlin|paris|tokyo|singapore|amsterdam|dubai|mumbai|bangalore|hyderabad)/i.test(l)
+    /^(greater|san francisco|new york|los angeles|london|toronto|sydney|remote|chicago|seattle|boston|austin|denver|atlanta|miami|dallas|washington|philadelphia|phoenix|portland|berlin|paris|tokyo|singapore|amsterdam|dubai|mumbai|bangalore|hyderabad)/i.test(l) ||
+    // Standalone country names
+    /^(united states|united kingdom|canada|australia|india|germany|france|china|japan|brazil|mexico|spain|italy|netherlands|sweden|norway|denmark|finland|switzerland|austria|belgium|portugal|new zealand|south korea|singapore|hong kong|taiwan|thailand|vietnam|indonesia|philippines|malaysia|pakistan|bangladesh|nigeria|south africa|egypt|turkey|russia|ukraine|poland|romania|hungary|greece|israel|saudi arabia|uae|united arab emirates)$/i.test(l)
 
   // Known name particles that can appear lowercase (de, van, la, etc.)
   const NAME_PARTICLES = new Set([
@@ -71,12 +80,13 @@ export function parseLinkedInOCR(text) {
     if (/\d/.test(l)) return false
     if (l.includes('@') || l.includes('http') || l.includes('/') || l.includes('|')) return false
     const words = l.split(/\s+/).filter(Boolean)
-    if (words.length < 1 || words.length > 5) return false
+    // LinkedIn always shows first + last name — require at least 2 words
+    if (words.length < 2 || words.length > 5) return false
+    // First word must start with uppercase
     if (!/^[A-Z]/.test(words[0])) return false
-    // Every word must contain only letters, apostrophes, or hyphens — no parens, dots, symbols
-    if (!words.every(w => /^[A-Za-z''\-]+$/.test(w))) return false
+    // Every word must start AND end with a letter (no leading/trailing hyphens)
+    if (!words.every(w => /^[A-Za-z][A-Za-z''\-]*[A-Za-z]$/.test(w) || /^[A-Za-z]$/.test(w))) return false
     // Any lowercase word must be a known name particle (de, van, la…)
-    // — rejects common English words like "to", "was", "connect", "sent"
     const lowercaseWords = words.filter(w => /^[a-z]/.test(w))
     if (lowercaseWords.some(w => !NAME_PARTICLES.has(w))) return false
     return true
@@ -86,11 +96,26 @@ export function parseLinkedInOCR(text) {
   const emailMatch    = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)
   const phoneMatch    = text.match(/(\+\d[\d\s\-().]{8,15}|\(?\d{3}\)?[\s.\-]\d{3}[\s.\-]\d{4})/)
 
-  // Primary: strict looksLikeName; fallback: same strict check on first 5 lines
-  // (no loose fallback — too many false positives from notification screens)
-  const nameLine =
-    cleanLines.find(l => looksLikeName(l) && !looksLikeLocation(l)) ||
-    cleanLines.slice(0, 5).find(l => looksLikeName(l) && !looksLikeLocation(l) && !looksLikeTitle(l))
+  // Name extraction: the name on LinkedIn is always the bold line immediately before
+  // the headline/title. Scan forward and find a title line whose preceding line is name-like.
+  let nameLine = null
+  for (let i = 1; i < cleanLines.length; i++) {
+    if (looksLikeTitle(cleanLines[i])) {
+      // Look back up to 3 lines for a name candidate
+      for (let j = i - 1; j >= Math.max(0, i - 3); j--) {
+        const candidate = cleanLines[j]
+        if (looksLikeName(candidate) && !looksLikeLocation(candidate)) {
+          nameLine = candidate
+          break
+        }
+      }
+      if (nameLine) break
+    }
+  }
+  // Fallback: direct scan if no title anchor found
+  if (!nameLine) {
+    nameLine = cleanLines.find(l => looksLikeName(l) && !looksLikeLocation(l))
+  }
 
   const atPattern = /^(.+?)\s+(?:at|@)\s+(.+?)(?:\s*[|·•\-].*)?$/i
   const headlineLine = cleanLines.find(l => atPattern.test(l) && looksLikeTitle(l))
@@ -111,11 +136,19 @@ export function parseLinkedInOCR(text) {
     if (titleIdx >= 0) {
       const next = cleanLines.slice(titleIdx + 1).find(l =>
         l.length < 80 && !looksLikeTitle(l) && !looksLikeLocation(l) &&
-        !l.includes('@') && !/^\d/.test(l)
+        !l.includes('@') && !/^\d/.test(l) &&
+        !UNIVERSITY_KEYWORDS.some(k => l.toLowerCase().includes(k))
       )
       if (next) company = next.split(/\s*[-–—·•]\s*/)[0].trim()
     }
   }
+
+  // University: first line containing a university keyword, excluding title lines
+  const universityLine = cleanLines.find(l =>
+    UNIVERSITY_KEYWORDS.some(k => l.toLowerCase().includes(k)) &&
+    !looksLikeTitle(l) &&
+    l.length < 120
+  )
 
   const aboutMatch = text.match(/\bAbout\b[\s\n]+([\s\S]+?)(?=\n\s*(?:Activity|Experience|Education|Skills|Recommendations|Posts|Comments|Images|\d[\d,]*\s*follower))/i)
   const notes = aboutMatch
@@ -123,13 +156,14 @@ export function parseLinkedInOCR(text) {
     : null
 
   return {
-    fullName:    nameLine   || '',
-    jobTitle:    jobTitle   || '',
-    company:     company    || '',
+    fullName:    nameLine        || '',
+    jobTitle:    jobTitle        || '',
+    company:     company         || '',
+    university:  universityLine  || '',
     email:       emailMatch ? emailMatch[0] : '',
     phone:       phoneMatch ? phoneMatch[0].trim() : '',
     linkedinUrl: linkedinMatch ? `https://linkedin.com/in/${linkedinMatch[1]}` : '',
-    notes:       notes      || '',
+    notes:       notes           || '',
     linkedinFound: !!linkedinMatch,
   }
 }

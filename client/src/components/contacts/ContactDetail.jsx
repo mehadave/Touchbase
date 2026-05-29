@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Edit3, Trash2, Link2, Mail, Phone, Building, ScanLine, Copy, ExternalLink } from 'lucide-react'
+import { Edit3, Trash2, Link2, Mail, Phone, Building, GraduationCap, ScanLine, Copy, ExternalLink } from 'lucide-react'
 import { Drawer } from '../ui/Modal.jsx'
 import Button from '../ui/Button.jsx'
 import Avatar from '../ui/Avatar.jsx'
@@ -159,6 +159,12 @@ export default function ContactDetail({ contact: initialContact, open, onClose }
             <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
               <Building size={15} className="text-gray-400 flex-shrink-0" />
               {contact.company}
+            </div>
+          )}
+          {contact.university && (
+            <div className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+              <GraduationCap size={15} className="text-gray-400 flex-shrink-0" />
+              {contact.university}
             </div>
           )}
 

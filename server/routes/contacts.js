@@ -197,7 +197,7 @@ router.post('/', async (req, res, next) => {
   try {
     const {
       fullName, email, phone, company, jobTitle, category,
-      linkedinUrl, notes, relationshipStrength, lastContacted,
+      linkedinUrl, university, notes, relationshipStrength, lastContacted,
       followUpFrequency, source, conferenceId, tags: tagNames,
     } = req.body
     if (!fullName?.trim()) return res.status(400).json({ error: 'Full name is required' })
@@ -227,6 +227,7 @@ router.post('/', async (req, res, next) => {
       jobTitle:             jobTitle?.trim() || null,
       category:             category || 'Personal',
       linkedinUrl:          linkedinUrl?.trim() || null,
+      university:           university?.trim() || null,
       notes:                notes?.trim() || null,
       relationshipStrength: relationshipStrength || 3,
       lastContacted:        lastContacted ? new Date(lastContacted) : null,
@@ -262,7 +263,7 @@ router.put('/:id', async (req, res, next) => {
 
     const {
       fullName, email, phone, company, jobTitle, category,
-      linkedinUrl, notes, relationshipStrength, lastContacted,
+      linkedinUrl, university, notes, relationshipStrength, lastContacted,
       followUpFrequency, source, conferenceId, tags: tagNames,
     } = req.body
 
@@ -282,6 +283,7 @@ router.put('/:id', async (req, res, next) => {
         jobTitle:             jobTitle?.trim()    ?? existing.jobTitle,
         category:             category            ?? existing.category,
         linkedinUrl:          linkedinUrl?.trim() ?? existing.linkedinUrl,
+        university:           university?.trim()  ?? existing.university,
         notes:                notes?.trim()       ?? existing.notes,
         relationshipStrength: relationshipStrength ?? existing.relationshipStrength,
         lastContacted:        lc,
@@ -399,6 +401,7 @@ router.post('/import', async (req, res, next) => {
             jobTitle:          row.jobTitle?.trim()    || existing.jobTitle,
             category:          row.category            || existing.category,
             linkedinUrl:       row.linkedinUrl?.trim() || existing.linkedinUrl,
+            university:        row.university?.trim()  || existing.university,
             notes:             row.notes?.trim()       || existing.notes,
             followUpFrequency: freq,
             nextFollowUp:      computeNextFollowUp(existing.lastContacted, freq),
@@ -420,6 +423,7 @@ router.post('/import', async (req, res, next) => {
         jobTitle:          row.jobTitle?.trim() || null,
         category:          row.category || 'Professional',
         linkedinUrl:       row.linkedinUrl?.trim() || null,
+        university:        row.university?.trim()  || null,
         notes:             row.notes?.trim() || null,
         relationshipStrength: row.relationshipStrength || 3,
         followUpFrequency: freq,

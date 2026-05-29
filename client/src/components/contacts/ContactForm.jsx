@@ -24,7 +24,7 @@ const FREQUENCIES = [
 
 const defaults = {
   fullName: '', email: '', phone: '', company: '', jobTitle: '',
-  category: 'Personal', linkedinUrl: '', notes: '',
+  university: '', category: 'Personal', linkedinUrl: '', notes: '',
   relationshipStrength: 3, lastContacted: '',
   followUpFrequency: 30, source: 'manual', tags: [],
 }
@@ -79,6 +79,7 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
       if (parsed.company     && !form.company)     set('company',     parsed.company)
       if (parsed.email       && !form.email)       set('email',       parsed.email)
       if (parsed.phone       && !form.phone)       set('phone',       parsed.phone)
+      if (parsed.university  && !form.university)  set('university',  parsed.university)
       if (parsed.linkedinUrl && !form.linkedinUrl) set('linkedinUrl', parsed.linkedinUrl)
       if (parsed.notes       && !form.notes)       set('notes',       parsed.notes)
       set('source', 'linkedin')
@@ -166,6 +167,14 @@ export default function ContactForm({ initial = {}, onSubmit, onCancel, loading 
           className={field}
         />
       </div>
+
+      {/* University */}
+      <input
+        value={form.university}
+        onChange={e => set('university', e.target.value)}
+        placeholder="University / School"
+        className={field}
+      />
 
       {/* Category pills */}
       <div className="flex gap-2">

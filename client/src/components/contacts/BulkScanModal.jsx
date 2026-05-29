@@ -242,6 +242,7 @@ export default function BulkScanModal({ open, onClose, onImported }) {
             fullName:    (c.override.fullName    ?? p.fullName)    || 'Unknown',
             jobTitle:    c.override.jobTitle     ?? p.jobTitle,
             company:     c.override.company      ?? p.company,
+            university:  c.override.university   ?? p.university,
             email:       c.override.email        ?? p.email,
             phone:       c.override.phone        ?? p.phone,
             linkedinUrl: c.override.linkedinUrl  ?? p.linkedinUrl,
@@ -429,6 +430,12 @@ export default function BulkScanModal({ open, onClose, onImported }) {
                             onChange={e => setOverride(c.id, 'jobTitle', e.target.value)}
                             placeholder="Job title"
                             className={`${field} text-xs py-1`}
+                          />
+                          <input
+                            value={c.override.university ?? c.parsed.university}
+                            onChange={e => setOverride(c.id, 'university', e.target.value)}
+                            placeholder="University"
+                            className={`${field} text-xs py-1 col-span-2`}
                           />
                           <div className="flex gap-1 items-center col-span-1">
                             <input
