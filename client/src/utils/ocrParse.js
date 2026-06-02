@@ -81,6 +81,10 @@ export function parseLinkedInOCR(text) {
     'product', 'marketing', 'sales', 'operations', 'finance', 'legal',
     'coordinator', 'specialist', 'strategist', 'advisor', 'executive',
     'intern', 'apprentice', 'trainee', 'fellow', 'contractor', 'freelance',
+    // Additional common LinkedIn roles
+    'recruiter', 'journalist', 'reporter', 'editor', 'writer', 'author',
+    'physician', 'doctor', 'nurse', 'therapist', 'accountant',
+    'entrepreneur', 'investor', 'coach', 'administrator',
   ]
 
   // Word-boundary matched — avoids false positives like "mit" inside "committed"
@@ -161,8 +165,8 @@ export function parseLinkedInOCR(text) {
     if (!degreeBadgeLines.has(l)) continue
     const stripped = l.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim()
     const candidate = extractLeadingName(stripped)
-    // Require at least 2 words — connection-degree lines always have first + last name
-    if (candidate && candidate.split(/\s+/).length >= 2) {
+    // The degree badge is strong enough evidence — accept even a single-word name
+    if (candidate && candidate.length >= 2) {
       nameLine = candidate
       break
     }
@@ -198,10 +202,16 @@ export function parseLinkedInOCR(text) {
     if (titleLine) jobTitle = titleLine
     const titleIdx = titleLine ? profileLines.indexOf(titleLine) : -1
     if (titleIdx >= 0) {
+      // Use comma-based location detection here instead of looksLikeLocation so
+      // companies starting with a city name ("Boston Consulting Group", "New York Times")
+      // are not incorrectly rejected as location lines.
+      // Universities are also valid employers (professor at London Business School),
+      // so UNIVERSITY_RE is not excluded here — the separator split below trims the school name.
       const next = profileLines.slice(titleIdx + 1).find(l =>
-        l.length < 80 && !looksLikeTitle(l) && !looksLikeLocation(l) &&
-        !l.includes('@') && !/^\d/.test(l) &&
-        !UNIVERSITY_RE.test(l)
+        l.length < 80 && !looksLikeTitle(l) &&
+        !/,\s/.test(l) &&   // "City, State" format → location, not a company
+        !/\b(area|metropolitan|county|district|province|region)\b/i.test(l) &&
+        !l.includes('@') && !/^\d/.test(l)
       )
       if (next) company = next.split(/\s*[-–—·•]\s*/)[0].trim()
     }
