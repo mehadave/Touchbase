@@ -11,7 +11,7 @@
 - **Daily Touchbase** — A priority algorithm scores every contact by how overdue they are and relationship strength, then picks the one you should reach out to today
 - **Streak System** — Consecutive-day tracking with milestone celebrations (7 / 14 / 30 / 60 / 90 days) and confetti
 - **Smart Templates** — 10 human-sounding message templates with `{name}`, `{company}`, `{title}` placeholders, auto-matched to each contact's category and your relationship strength
-- **LinkedIn OCR** — Upload a screenshot of any LinkedIn profile; Tesseract.js reads it client-side and auto-fills the contact form
+- **LinkedIn OCR** — Screenshot any LinkedIn profile; Tesseract.js parses it client-side and auto-fills name, job title, company, university, email, phone, and LinkedIn URL. Handles accented names (José, María, François), banner image text, post-connection notification overlays, connection-degree badge lines, city-named companies (Boston Consulting Group, New York Times), and OCR line-split URLs — no API key, no server round-trip
 - **Notes** — Freeform notes linked to contacts, auto-created from the contact form under "Contact Notes"
 - **Follow-up Calendar** — Monthly calendar view with colour-coded dots showing who's due, overdue, or on track
 - **360° Contact Profiles** — Photo upload, relationship stars (1–5), tags, notes, LinkedIn URL, follow-up frequency
@@ -127,6 +127,7 @@ Touchbase/
 - **Streak SQL** — Uses the consecutive-dates window function trick: `date - ROW_NUMBER() OVER (ORDER BY date)` groups consecutive days into a constant
 - **Priority algorithm** — `LEAST(days_overdue / frequency, 3.0) + (strength × 0.2)` — overdue ratio capped at 3× to prevent monopolisation
 - **Lazy OCR** — Tesseract.js (~10MB WASM) is dynamically imported only when the user clicks "Scan photo"
+- **OCR parsing** — Multi-pass name extraction: connection-degree badge lines (`"Selva Jothi · 2nd"`) are prioritised first since the badge is the most reliable name signal; falls back to Unicode-aware pattern matching (`\p{L}`) so accented names work. Noise filters drop LinkedIn nav, post-connection notifications, and banner text. Company fallback uses comma-based location detection instead of a city-name blocklist so "Boston Consulting Group" isn't confused with the city of Boston
 - **Soft deletes** — All tables have `deleted_at TIMESTAMPTZ`; nothing is ever hard-deleted
 - **Auto token refresh** — On 401, the API client calls `supabase.auth.refreshSession()` and retries once
 

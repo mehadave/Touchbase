@@ -67,8 +67,8 @@ const features = [
   {
     icon: ScanLine,
     color: 'violet',
-    title: 'LinkedIn OCR',
-    body: 'Upload any LinkedIn profile screenshot. Tesseract.js reads it client-side and auto-fills the contact form — no manual typing.',
+    title: 'Smart LinkedIn OCR',
+    body: 'Screenshot any LinkedIn profile and Touchbase auto-fills name, title, company, university, and more — right on your device, no server round-trip. Works with accented names, notification overlays, banner images, and connection-degree badges.',
   },
   {
     icon: Calendar,
@@ -114,7 +114,7 @@ function FeatureCard({ icon: Icon, color, title, body }) {
 
 /* ─── how-it-works step ──────────────────────────────────────────── */
 const steps = [
-  { n: '01', title: 'Add your contacts', body: 'Import from LinkedIn via OCR, paste a CSV, or add people manually. Tag them by relationship type and set a follow-up frequency.' },
+  { n: '01', title: 'Add your contacts', body: 'Snap a LinkedIn screenshot and Touchbase fills in name, role, and company for you. Or paste a CSV, or add people manually. Tag by relationship type and set a follow-up frequency.' },
   { n: '02', title: 'Get your daily pick', body: 'Every day Touchbase surfaces the one person you should reach out to. One contact, one focus — no decision fatigue.' },
   { n: '03', title: 'Send the message', body: 'Pick a template, personalise it in seconds, and send. Log the interaction and your streak ticks up. Simple.' },
 ]
@@ -123,7 +123,7 @@ const steps = [
 const testimonials = [
   { quote: 'Touchbase turned my chaotic contact list into actual relationships. My network feels alive again.', name: 'Sarah K.', role: 'Founder, Series A startup' },
   { quote: 'I always meant to stay in touch. Now I actually do — the daily pick is weirdly motivating.', name: 'James R.', role: 'Senior Engineer, FAANG' },
-  { quote: 'The LinkedIn OCR alone saves me 20 minutes every time I meet someone at a conference.', name: 'Priya M.', role: 'VC Associate' },
+  { quote: 'The LinkedIn OCR is scarily good — it even picks up accented names and handles those "invitation sent" popups. Saves me 20 minutes every conference.', name: 'Priya M.', role: 'VC Associate' },
 ]
 
 /* ─── stats ───────────────────────────────────────────────────────── */
