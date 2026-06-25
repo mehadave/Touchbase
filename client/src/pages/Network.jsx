@@ -175,9 +175,9 @@ export default function Network() {
 
       {/* Sub-tabs — full width on mobile so tabs don't clip */}
       <nav className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-full sm:w-fit">
-        <NavLink to="/network/personal"      className={subNavClass + ' flex-1 sm:flex-none text-center'}>Personal</NavLink>
-        <NavLink to="/network/professional"  className={subNavClass + ' flex-1 sm:flex-none text-center'}>Professional</NavLink>
-        <NavLink to="/network/social"        className={subNavClass + ' flex-1 sm:flex-none text-center'}>Social</NavLink>
+        <NavLink to="/network/personal"     className={({ isActive }) => `${subNavClass({ isActive })} flex-1 sm:flex-none text-center`}>Personal</NavLink>
+        <NavLink to="/network/professional" className={({ isActive }) => `${subNavClass({ isActive })} flex-1 sm:flex-none text-center`}>Professional</NavLink>
+        <NavLink to="/network/social"       className={({ isActive }) => `${subNavClass({ isActive })} flex-1 sm:flex-none text-center`}>Social</NavLink>
       </nav>
 
       <Routes>
