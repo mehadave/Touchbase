@@ -29,3 +29,8 @@ Thumbs.db
 .idea/
 *.swp
 .vercel
+
+# Claude Code local config (keep local, never commit)
+.claude/
+CLAUDE.md
+CLAUDE.local.md
